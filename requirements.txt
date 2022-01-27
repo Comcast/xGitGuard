@@ -1,0 +1,9 @@
+numpy
+pandas
+nltk
+requests
+scipy
+scikit-learn
+stop_words
+urlextract
+pyyaml

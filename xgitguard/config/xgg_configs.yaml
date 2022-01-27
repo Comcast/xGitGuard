@@ -1,0 +1,19 @@
+# xGitGuard Input Configurations
+default:
+  log_dir: None
+
+github:
+  # GitHub Public
+  public_api_url: "https://api.github.com/search/code"
+  public_commits_url: "https://api.github.com/repos/%s/%s/commits?path=%s"
+
+  # GitHub Enterprise
+  enterprise_api_url: "https://github.<< Enterprise Name >>.com/api/v3/search/code"
+  enterprise_pre_url: "https://github.<< Enterprise Name >>.com/api/v3/repos/"
+  url_validator: "https://github.<< Enterprise Name >>.com/api/v3/search/code"
+  entprise_commits_url: "https://github.<< Enterprise Name >>.com/api/v3/repos/{user_name}/{repo_name}/commits?path={file_path}"
+  enterprise_header: {"Accept": "application/vnd.github.v3.raw"}
+
+secrets:
+  public_data_columns: ["Source", "Primary_Key", "Second_Key", "Extension", "URL", "Owner", "Repo_Name", "Commit_Details", "Secret", "Code", "Detected_Timestamp", "Key_Weight", "SKey_Count", "Entropy", "Dictionary_Similarity", "Score", "Year", "Month", "Day", "Hour", ]
+  enterprise_data_columns: ["Source", "Second_Key", "Extension", "URL", "Owner", "Repo_Name", "Commit_Details", "Secret", "Code", "Detected_Timestamp", "Key_Weight", "SKey_Count", "Entropy", "Dictionary_Similarity", "Score", "Year", "Month", "Day", "Hour", ]

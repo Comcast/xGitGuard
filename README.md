@@ -1,7 +1,7 @@
 <h1 align="center"> xGitGuard </h1>
 
-<p align="center">AI-based Secrets Detection Python Framework<br> 
-<i><b>Detect Secrets (API tokens, Username, Passwords, etc.) exposed on GitHub Repos</b></i><br>
+<p align="center">AI-Based Secrets Detection<br> 
+<i><b>Detect Secrets (API Tokens, Usernames, Passwords, etc.) Exposed on GitHub Repositories</b></i><br>
 Designed and Developed by Comcast Cybersecurity Research and Development Team</p>
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
@@ -20,17 +20,18 @@ Designed and Developed by Comcast Cybersecurity Research and Development Team</p
 - [Usage](#usage)
   - [Enterprise Github Secrets Detection](#enterprise-github-secrets-detection)
   - [Public Github Secrets Detection](#public-github-secrets-detection)
+  - [ML Model Training](#ml-model-training)
 - [License](#license)
 
 ## Overview
 
 - **Detecting Publicly Exposed Secrets on GitHub at Scale**
-  - xGitGuard is an AI-based system designed and developed by Comcast Cybersecurity Research and Development team that detects secrets (e.g., API tokens, username & passwords, etc.) exposed on the GitHub. xGitGuard uses advanced Natural Language Processing to detect secrets at scale and with appropriate velocity in GitHub repositories.
+  - xGitGuard is an AI-based system designed and developed by the Comcast Cybersecurity Research and Development team that detects secrets (e.g., API tokens, usernames, passwords, etc.) exposed on GitHub. xGitGuard uses advanced Natural Language Processing to detect secrets at scale and with appropriate velocity in GitHub repositories.
 - What are Secrets?
   - **Credentials**
-    - Username & passwords, Server credentials, Account credentials, etc.
+    - Usernames & passwords, server credentials, account credentials, etc.
   - **Keys/Tokens**
-    - Service API tokens (AWS, Azure, etc), Encryption keys, etc.
+    - Service API tokens (AWS, Azure, etc), encryption keys, etc.
 
 ## xGitGuard Workflow
 
@@ -40,15 +41,15 @@ Designed and Developed by Comcast Cybersecurity Research and Development Team</p
 
 ### Credential Detection Workflow
 
-- [Enterprise Credential Secrets Detection](#enterprise-credential-secrets-detection) - Run Secret detection on the given `GitHub Enterprise` Account
-- [Public Credential Secrets Detection](#public-credential-secrets-detection) - Run Secret detection on the `GitHub Public` Account
+- [Enterprise Credential Secrets Detection](#enterprise-credential-secrets-detection) - Run Secret detection on the given `GitHub Enterprise` account
+- [Public Credential Secrets Detection](#public-credential-secrets-detection) - Run Secret detection on the `GitHub Public` account
 
   ![](assets/keys_Token_Detection_workflow.png)
 
 ### Keys&Token Detection Workflow
 
-- [Enterprise Keys and Tokens Secrets Detection](#enterprise-keys-and-tokens-secrets-detection) - Run Secret detection on the given `GitHub Enterprise` Account
-- [Public Keys and Tokens Secrets Detection](#public-keys-and-tokens-secrets-detection) - Run Secret detection on the `GitHub Public` Account
+- [Enterprise Keys and Tokens Secrets Detection](#enterprise-keys-and-tokens-secrets-detection) - Run Secret detection on the given `GitHub Enterprise` account
+- [Public Keys and Tokens Secrets Detection](#public-keys-and-tokens-secrets-detection) - Run Secret detection on the `GitHub Public` account
 
   ![](assets/keys_Token_Detection_workflow.png)
 
@@ -57,7 +58,7 @@ Designed and Developed by Comcast Cybersecurity Research and Development Team</p
 ### Environment Setup
 
 - Install [Python >= v3.6]
-- Clone/Download the Repository from GitHub
+- Clone/Download the repository from GitHub
 - Traverse into the cloned `xGitGuard` folder
 
   ```
@@ -67,25 +68,25 @@ Designed and Developed by Comcast Cybersecurity Research and Development Team</p
 - Install Python Dependency Packages
 
   ```
-  pip install -r requirements.txt
+  python -m pip install -r requirements.txt
   ```
 
 ## Search Patterns
 
-- xgitguard supports two ways to define configurations
+- There are two ways to define configurations in xGitGuard
 
   - Config Files
   - Command Line Inputs
 
 - For **`Enterprise`** Github Detection **`(Secondary Keyword + Extension)`** under config directory
-  - Secondary Keyword: Keys: secondary_keys.csv file or User Feed - list of Keys
-  - Secondary Keyword: Credentials: secondary_creds.csv file or User Feed - list of Credentials
+  - Secondary Keyword: secondary_keys.csv file or User Feed - list of Keys & Tokens
+  - Secondary Keyword: secondary_creds.csv file or User Feed - list of Credentials
   - Extension: extensions.csv file or User Feed - List of file Extensions
 - For **`Public`** Github Detection **`(Primary Keyword + Secondary Keyword + Extension)`** under config directory
 
-  - Primary Keyword: primary_keywords.csv file or User Feed - list of Keys
-  - Secondary Keyword: Keys: secondary_keys.csv file or User Feed - list of Keys
-  - Secondary Keyword: Credentials: secondary_creds.csv file or User Feed - list of Credentials
+  - Primary Keyword: primary_keywords.csv file or User Feed - list of primary Keys
+  - Secondary Keyword: secondary_keys.csv file or User Feed - list of Keys & Toekns
+  - Secondary Keyword: secondary_creds.csv file or User Feed - list of Credentials
   - Extension: extensions.csv file or User Feed - List of file Extensions
 
 ## Usage
@@ -93,54 +94,434 @@ Designed and Developed by Comcast Cybersecurity Research and Development Team</p
 - [Enterprise Github Secrets Detection](#enterprise-github-secrets-detection)
   - [Enterprise Credential Secrets Detection](#enterprise-credential-secrets-detection)
   - [Enterprise Keys and Tokens Secrets Detection](#enterprise-keys-and-tokens-secrets-detection)
-  - [Enterprise Inputs and Outputs](#enterprise-inputs-and-outputs)
 - [Public Github Secrets Detection](#public-github-secrets-detection)
   - [Public Credential Secrets Detection](#public-credential-secrets-detection)
   - [Public Keys and Tokens Secrets Detection](#public-keys-and-tokens-secrets-detection)
-  - [Public Inputs and Outputs](#public-inputs-and-outputs)
 
 ### Enterprise Github Secrets Detection
 
-#### Configuration Data Setup
+#### API Configuration Setup
 
-- Setup below system Environment variables for accessing GitHub
-  - **`GITHUB_ENTERPRISE_TOKEN`** - Enterprise GitHub API Token with full Scopes of repo and user.
-    - Refer GitHub Docs [How To Get GitHub API Token] for help
-- Update below configs with `your Enterprise Name` in Config file **`xgg_configs.yaml`** in config Data folder **`xgitguard\config\*`**
+- Setup the system Environment variable below for accessing GitHub
+  - **`GITHUB_ENTERPRISE_TOKEN`** - Enterprise GitHub API Token with full scopes of repository and user.
+    - Refer to the GitHub documentation [How To Get GitHub API Token] for help
+- Update the following configs with `your Enterprise Name` in config file **`xgg_configs.yaml`** in config Data folder **`xgitguard\config\*`**
   - enterprise_api_url: `https://github.<<`**`Enterprise_Name`**`>>.com/api/v3/search/code`
   - enterprise_pre_url: `https://github.<<`**`Enterprise_Name`**`>>.com/api/v3/repos/`
   - url_validator: `https://github.<<`**`Enterprise_Name`**`>>.com/api/v3/search/code`
-  - entprise_commits_url: `https://github.<<`**`Enterprise_Name`**`>>.com/api/v3/repos/{user_name}/{repo_name}/commits?path={file_path}`
+  - enterprise_commits_url: `https://github.<<`**`Enterprise_Name`**`>>.com/api/v3/repos/{user_name}/{repo_name}/commits?path={file_path}`
 
-#### ML Model Process
+#### Running Enterprise Secret Detection
 
-##### ML Model Training Data Preparion
 
-- Create Training data in csv format for Credential and Keys&Tokens and place in **`xgitguard\config\*`** folder
-- Data Preparation procedure
-- key_train.csv - Keys and Tokens Training Data
-- cred_train.csv - Credentials Training Data
-- confidence_values.csv
-  - All Primary, Seconday keywords and Extensions need to be added to this file in format of key and value pair.
-  - Value for the keys needs to be decided by you and it represents the weight and importance of the keyword, the higher the value means higher validity score for the detection(confidence level).
-  - e.g., key,value in a csv file.
-    - abc.xyz.com,3
-    - token,4
-    - py,2
-
-##### ML Model Training - Optional
-
-- Pre-requisite: [ML Model Training Data Preparion](#ml-model-training-data-preparion)
-
-- Training Procedure
-
-  > **Note:** If persisted Model **xgg\_\*model\*.pickle** is not present in config folder, as part of the detections Run, ML model will be trained and persisted even if the train model flag set as 'No'.
-
-- Traverse into the "models" folder
+- Traverse into the `github-enterprise` script folder
 
   ```
-  cd models
+  cd github-enterprise
   ```
+
+#### Enterprise Credential Secrets Detection
+
+##### Detections Without Additional ML Filter
+
+By default, the Credential Secrets Detection script runs for given Secondary Keywords and extensions without ML Filter.
+
+```
+# Run with Default configs
+python enterprise_cred_detections.py
+```
+
+##### Detection With ML Filter
+
+xGitGuard also has an additional ML filter where users can collect their organization/targeted data and train their model. Having this ML filter helps to reduce the false positives from the detection.
+
+##### Pre-Requisite To Use the ML Filter
+
+User Needs to follow the below process to collect data and train the model to use ML filter.
+
+- Follow [ML Model Training](#ml-model-training)
+
+> **NOTE** :
+>
+> - To use ML Filter, ML training is mandatory. This includes data collection, feature engineering & model persisting.
+> - This process is going to be based on user requirements. It can be one time or if the user needs to improve the data, then needs to be done periodically.
+
+##### Command to Run Enterprise Credential Scanner with ML
+
+```
+# Run for given Secondary Keyword and extension with ML model,
+python enterprise_cred_detections.py -m Yes
+```
+
+##### Command-Line Arguments for Credential Scanner
+
+```
+Run usage:
+enterprise_cred_detections.py [-h] [-s Secondary Keywords] [-e Extensions] [-t Train Model] [-m ML Filter] [-d ML Training Data collection][-l Logger Level] [-c Console Logging]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -s Secondary Keywords, --secondary_keywords Secondary Keywords
+                          Pass the Secondary Keywords list as a comma-separated string
+  -e Extensions, --extensions Extensions
+                          Pass the Extensions list as a comma-separated string
+  -m ML Prediction, --ml_prediction ML Prediction
+                          Pass the ML Filter as Yes or No. Default is No
+  -u Set Unmask, --unmask_secret To write secret unmasked, then set Yes
+                          Pass the flag as Yes or No. Default is No
+  -l Logger Level, --log_level Logger Level
+                          Pass the Logging level as for CRITICAL - 50, ERROR - 40 WARNING - 30 INFO - 20 DEBUG - 10. Default is 20
+  -c Console Logging, --console_logging Console Logging
+                          Pass the Console Logging as Yes or No. Default is Yes
+```
+
+- Inputs used for search and scan
+
+  > **Note:** Command-line argument keywords have precedence over config files (Default). If no keywords are passed in cli, data from config files will be used for the search.
+
+  - secondary_creds.csv file has a default list of credential relevant patterns for search, which can be updated by users based on their requirement.
+  - extensions.csv file has a default list of file extensions to be searched, which can be updated by the users based on their requirement.
+
+- GitHub search pattern for above examples: **`password +extension:py`**
+
+#### Enterprise Keys and Tokens Secrets Detection
+
+##### Detections Without Additional ML Filter
+
+By default, the Keys and Tokens Secrets Detection script runs for given Secondary Keywords and the extensions without ML Filter.
+
+```
+# Run with Default configs
+python enterprise_key_detections.py
+```
+
+##### Detections With ML Filter
+
+xGitGuard also has an additional ML filter where users can collect their organization/targeted data and train their model. Having this ML filter helps in reducing the false positives from the detection.
+
+##### Pre-Requisite To Use ML Feature
+
+The user needs to follow the below process to collect data and train the model to use ML filter.
+
+- Follow [ML Model Training](#ml-model-training)
+
+> **NOTE** :
+>
+> - To use ML filter, ML training is mandatory. It includes data collection, feature engineering & model persisting.
+> - This process is going to be based on user requirements. It can be one time or if the user needs to improve the data, then it needs to be done periodically.
+
+##### Command to Run Enterprise Keys & Token Scanner with ML
+
+```
+# Run for given Secondary Keyword and extension with ML model
+python enterprise_key_detections.py -m Yes
+```
+
+##### Command-Line Arguments for Keys & Token Scanner
+
+```
+Run usage:
+enterprise_key_detections.py [-h] [-s Secondary Keywords] [-e Extensions] [-t Train Model] [-l Logger Level] [-c Console Logging]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -s Secondary Keywords, --secondary_keywords Secondary Keywords
+                          Pass the Secondary Keywords list as a comma-separated string
+  -e Extensions, --extensions Extensions
+                          Pass the Extensions list as a comma-separated string
+  -m ML Prediction, --ml_prediction ML Prediction
+                          Pass the ML Filter as Yes or No. Default is No
+  -u Set Unmask, --unmask_secret To write secret unmasked, then set Yes
+                          Pass the flag as Yes or No. Default is No
+  -l Logger Level, --log_level Logger Level
+                          Pass the Logging level as for CRITICAL - 50, ERROR - 40 WARNING - 30 INFO - 20 DEBUG - 10. Default is 20
+  -c Console Logging, --console_logging Console Logging
+                          Pass the Console Logging as Yes or No. Default is Yes
+```
+
+- Inputs used for search and scan
+
+  > **Note:** Command-line argument keywords have precedence over config files (Default). If no keywords are passed in cli, data from the config files will be used for search.
+
+  - secondary_keys.csv file will have a default list of key relevant patterns for search, which can be updated by the users based on their requirement.
+  - extensions.csv file has a default list of file extensions to be searched, which can be updated by the users based on their requirement.
+
+- GitHub search pattern for above examples: **`api_key +extension:py`**
+
+#### Enterprise Output Format:
+
+##### Output Files
+
+- **Credentials**
+
+  ```
+    1. Hashed Url Files: xgitguard\output\*_enterprise_hashed_url_creds.csv
+        - List previously Processed Search urls. Urls stored will be skipped in next run to avoid re processing.
+    2. Secrets Detected: xgitguard\output\*_xgg_enterprise_creds_detected.csv
+    3. Log File: xgitguard\logs\enterprise_key_detections_*yyyymmdd_hhmmss*.log
+  ```
+
+- **Keys & Tokens**
+
+  ```
+    1. Hashed Url Files: xgitguard\output\*_enterprise_hashed_url_keys.csv
+        - List previously Processed Search urls. Urls stored will be skipped in next run to avoid re processing.
+    2. Secrets Detected: xgitguard\output\*_xgg_enterprise_keys_detected.csv
+    3. Log File: xgitguard\logs\enterprise_key_detections_*yyyymmdd_hhmmss*.log
+  ```
+
+### Public Github Secrets Detection
+
+#### Configuration Data Setup
+
+- Setup the Environment variable below for accessing GitHub
+  - **`GITHUB_TOKEN`** - Public GitHub API Token with full scopes of the repository and user.
+    - Refer to GitHub Docs [How To Get GitHub API Token] for help
+- Config data folder **`xgitguard\config\*`**
+
+#### Running Public Credential Secrets Detection
+
+- Traverse into the `github-public` script folder
+    ```
+    cd github-public
+    ```
+
+> **Note:** User needs to remove the sample content from primary_keywords.csv and add primary keywords like targeted domain names to be searched in public GitHub.
+
+#### Public Credential Secrets Detection
+
+##### Detections Without Additional ML Filter
+
+By default, Credential Secrets Detection script runs for given Primary Keyword, Secondary Keyword, and extension without ML Filter.
+
+```
+# Run with Default configs
+python public_cred_detections.py
+```
+
+##### Detections With ML Filter
+
+xGitGuard also has an additional ML filter, where users can collect their organization/targeted data and train their model. Having this ML filter helps in reducing the false positives from the detection.
+
+##### Pre-Requisite To Use ML Feature
+
+The user needs to follow the below process to collect data and train the model to use ML filter.
+
+- Follow [ML Model Training](#ml-model-training)
+
+> **NOTE** :
+>
+> - To use ML Feature, ML training is mandatory. It includes data collection, feature engineering & model persisting.
+
+##### Command to Run Public Credential Scanner with ML
+
+```
+# Run for given Primary Keyword, Secondary Keyword, and extension with ML model
+python public_cred_detections.py -m Yes
+```
+
+##### Command-Line Arguments for Public Credential Scanner
+
+```
+Run usage:
+usage: public_cred_detections.py [-h] [-p Primary Keywords] [-s Secondary Keywords] [-e Extensions] [-t Train Model] [-l Logger Level] [-c Console Logging]
+
+optional arguments:
+-h, --help show this help message and exit
+-p Primary Keywords, --primary_keywords Primary Keywords
+Pass the Primary Keywords list as a comma-separated string
+-s Secondary Keywords, --secondary_keywords Secondary Keywords
+Pass the Secondary Keywords list as a comma-separated string
+-e Extensions, --extensions Extensions
+Pass the Extensions list as a comma-separated string
+-m ML Prediction, --ml_prediction ML Prediction
+                          Pass the ML Filter as Yes or No. Default is No
+-u Set Unmask, --unmask_secret To write secret unmasked, then set Yes
+                          Pass the flag as Yes or No. Default is No
+-l Logger Level, --log_level Logger Level
+Pass the Logging level as for CRITICAL - 50, ERROR - 40 WARNING - 30 INFO - 20 DEBUG - 10. Default is 20
+-c Console Logging, --console_logging Console Logging
+Pass the Console Logging as Yes or No. Default is Yes
+```
+
+- Inputs used for search and scan
+
+  > **Note:**
+  > Command line argument keywords have precedence over config files (Default).
+  > If no keywords are passed in cli, config files data will be used for search.
+
+  - primary_keywords.csv file will have a default list of primary keyword-relevant patterns for search
+  - secondary_creds.csv file will have a default list of credential relevant patterns for search, which can be updated by the users based on their requirement.
+  - extensions.csv file has a default list of file extensions to be searched, which can be updated by the users based on their requirement.
+
+- GitHub search pattern for above examples: **`abc.xyz.com password +extension:py`**
+
+##### Public Keys and Tokens Secrets Detection
+
+##### Detections Without Additional ML Filter
+
+By default, Keys and Tokens Secret Detection script runs for given Primary Keyword, Secondary Keyword and extension without ML Filter.
+
+```
+# Run with Default configs
+python public_key_detections.py
+```
+
+##### Detections With ML Filter
+
+xGitGuard also has an additional ML filter, where users can collect their organization/targeted data and train their model. Having this ML filter helps in reducing the false positives from the detection.
+
+##### Pre-Requisite To Use ML Feature
+
+The user needs to follow the below process to collect data and train the model to use ML filter.
+
+- Follow [ML Model Training](#ml-model-training)
+
+> **NOTE** :  
+> To use ML Feature, ML training is mandatory. It includes data collection,feature engineering & model persisting.
+
+##### Command to Run Public Keys & Tokens Secret Scanner with ML
+
+```
+# Run for given  Primary Keyword, Secondary Keyword, and extension with ML model,
+python public_key_detections.py -m Yes
+```
+
+##### Command-Line Arguments for Public Keys & Tokens Secret Scanner
+
+```
+usage:
+public_key_detections.py [-h] [-s Secondary Keywords] [-e Extensions] [-t Train Model] [-l Logger Level] [-c Console Logging]
+
+optional arguments:
+-h, --help show this help message and exit
+-s Secondary Keywords, --secondary_keywords Secondary Keywords
+Pass the Secondary Keywords list as a comma-separated string
+-e Extensions, --extensions Extensions
+Pass the Extensions list as a comma-separated string
+-m ML Prediction, --ml_prediction ML Prediction
+                          Pass the ML Filter as Yes or No. Default is No
+-u Set Unmask, --unmask_secret To write secret unmasked, then set Yes
+                          Pass the flag as Yes or No. Default is No
+-l Logger Level, --log_level Logger Level
+Pass the Logging level as for CRITICAL - 50, ERROR - 40 WARNING - 30 INFO - 20 DEBUG - 10. Default is 20
+-c Console Logging, --console_logging Console Logging
+Pass the Console Logging as Yes or No. Default is Yes
+```
+
+- Inputs used for search and scan
+
+  > **Note:**
+  > Command line argument keywords have precedence over config files (Default).
+  > If no keywords are passed in cli, config files data will be used for search.
+
+  - primary_keywords.csv file will have a default list of primary keyword-relevant patterns for search, which can be updated by the users based on their requirement.
+  - secondary_keys.csv file will have a default list of tokens & keys relevant patterns for search, which can be updated by the users based on their requirement.
+  - extensions.csv file has a default list of file extensions to be searched, which can be updated by the users based on their requirement.
+
+- GitHub search pattern for above examples: **`abc.xyz.com api_key +extension:py`**
+
+##### Public Output Files
+
+- **Credentials**
+
+  ```
+    1. Hashed Url Files: xgitguard\output\*_public_hashed_url_creds.csv
+        - List pf previously Processed Search urls. Urls stored will be skipped in next run to avoid re processing.
+    2. Secrets Detected: xgitguard\output\*_xgg_public_creds_detected.csv
+    3. Log File: xgitguard\logs\public_key_detections_*yyyymmdd_hhmmss*.log
+  ```
+
+- **Keys & Tokens**
+
+  ```
+    1. Hashed Url Files: xgitguard\output\*_public_hashed_url_keys.csv
+        - List pf previously Processed Search urls. Urls stored will be skipped in next run to avoid re processing.
+    2. Secrets Detected: xgitguard\output\*_xgg_public_keys_detected.csv
+    3. Log File: xgitguard\logs\public_key_detections_*yyyymmdd_hhmmss*.log
+  ```
+
+> **Note:** By Default, the detected secrets will be masked to hide sensitive data. If needed, user can skip the masking to write raw secret using command line argument `-u Yes or --unmask_secret Yes`. Refer command line options for more details.
+
+#### ML Model Training
+
+#### Enterprise ML Model Training Procedure
+
+To use ML Feature, ML training is mandatory. It includes data collection, feature engineering & model persisting.
+
+> **Note:** Labelling the collected secret is an important process to improve the ML prediction.
+
+
+
+- Traverse into the "ml_training" folder
+
+  ```
+  cd ml_training
+  ```
+
+##### Data Collection
+
+Traverse into the "data collector" folder under ml_training
+
+```
+  cd ml_data_collector\github-enterprise-ml-data-collector
+```
+
+- Credentials
+
+  1. Run for given Secondary Keywords and extensions
+     ```
+     python enterprise_cred_data_collector.py
+     ```
+  2. To run with other parameters, please use help.
+     ```
+     python enterprise_cred_data_collector.py  -h
+     ```
+  3. Training data for Enterprise Creds collected will be placed in **`xgitguard\output\cred_train_source.csv`** folder
+
+- Keys & Tokens
+
+  1. Run for given Secondary Keywords and extensions,
+     ```
+     python enterprise_key_data_collector.py
+     ```
+  2. To run with other parameters, please use help.
+     ```
+     python enterprise_key_data_collector.py  -h
+     ```
+  3. Training data for Enterprise Keys and Tokens collected will be placed in **`xgitguard\output\key_train_source.csv`** folder
+
+##### Review & Label the Collected Data
+
+1. By default all the data collected will be labeled as 1 under column "Label" in collected training data indicating the collected secret as a valid one.
+2. **`User needs to review each row in the collected data and update the label value.`**
+   **`i.e: if the user thinks collected data is not a secret, then change the value to 0 for that particular row.`**
+3. By doing this, ML will have quality data for the model to reduce false positives.
+
+##### Feature Engineering
+
+Traverse into the "ml_training" folder
+
+- Credentials
+
+  1.  Run with option cred for engineering collected cred data
+      ```
+      python ml_feature_engineering.py cred
+      ```
+  2.  By default in Enterprise mode, input will be cred_train_source.csv
+  3.  Engineered data for Enterprise Creds output will be placed in **`xgitguard\output\cred_train.csv`** folder
+
+- Keys & Tokens
+  1. Run with option cred for engineering collected keys & tokens data
+     ```
+     python ml_feature_engineering.py key
+     ```
+  2. By default in Enterprise mode, input will be key_train_source.csv
+  3. Engineered data for Enterprise Keys & Tokens output will be placed in **`xgitguard\output\key_train.csv`** folder
+
+##### ML Model Creation for Enterprise
+
+Traverse into the "ml_training" folder
 
 - Run training with Cred Training Data and persist model
 
@@ -154,358 +535,133 @@ Designed and Developed by Comcast Cybersecurity Research and Development Team</p
   python model.py key
   ```
 
-- Command Line Arguments
+- For help on command line arguments, run
+  ```
+  python model.py  -h
+  ```
+  > **Note:** If persisted model **xgitguard\output\xgg\_\*.pickle** is not present in the output folder, then use engineered data to create a model and persist it.
+
+#### Public GitHub ML Model Training Procedure
+
+To use ML Feature, ML training is mandatory. It includes data collection, feature engineering & model persisting.
+
+> **Note:** Labelling the collected secret is an important process to use the ML effectively.
+
+
+- Traverse into the "models" folder
 
   ```
-  usage: model.py [-h] [-t Train Model] [-l Logger Level] [-c Console Logging] Data_Type
-
-  positional arguments:
-  Data_Type             Pass the Data_Type as cred or key
-
-  optional arguments:
-  -h, --help            show this help message and exit
-  -t Train Model, --train_model Train Model
-                          Pass the Train Model as Yes or No. Default is Yes
-  -l Logger Level, --log_level Logger Level
-                          Pass the Logging level as for CRITICAL - 50, ERROR - 40 WARNING - 30 INFO - 20 DEBUG - 10. Default is 20
-  -c Console Logging, --console_logging Console Logging
-                          Pass the Console Logging as Yes or No. Default is Yes
+  cd ml_training
   ```
 
-#### Running Enterprise Secret Detection
+##### Data Collection :
 
-##### Pre-Setup
+Traverse into the "data collector" folder
 
-- Traverse into the `github-enterprise` script folder
+```
+cd ml_training\ml_data_collector\github-public-ml-data-collector
+```
 
-  ```
-  cd github-enterprise
-  ```
+> **Note:** User needs to remove the sample content from primary_keywords.csv and add primary keywords like targeted domain names to be searched in public GitHub.
 
-##### Enterprise Credential Secrets Detection
+- Credentials
 
-- Running the Credential Secrets Detection script
-  ```
-  # Run with Default configs
-  python enterprise_cred_detections.py
-  ```
-- Command Line Arguments
+  1. Run for given Primary Keywords, Secondary Keywords, and extensions
+     ```
+     python public_cred_data_collector.py
+     ```
+  2. To run with other parameters, please use help.
+     ```
+     python public_cred_data_collector.py -h
+     ```
+  3. Training data for Public Creds collected will be placed in **`xgitguard\output\public_cred_train_source.csv`** folder
 
-  ```
-  Run usage:
-  enterprise_cred_detections.py [-h] [-s Secondary Keywords] [-e Extensions] [-t Train Model] [-l Logger Level] [-c Console Logging]
+- Keys & Tokens
 
-  optional arguments:
-    -h, --help            show this help message and exit
-    -s Secondary Keywords, --secondary_keywords Secondary Keywords
-                            Pass the Secondary Keywords list as comma separated string
-    -e Extensions, --extensions Extensions
-                            Pass the Extensions list as comma separated string
-    -t Train Model, --train_model Train Model
-                            Pass the Train Model as Yes or No. Default is No
-    -l Logger Level, --log_level Logger Level
-                            Pass the Logging level as for CRITICAL - 50, ERROR - 40 WARNING - 30 INFO - 20 DEBUG - 10. Default is 20
-    -c Console Logging, --console_logging Console Logging
-                            Pass the Console Logging as Yes or No. Default is Yes
-  ```
+  1. Run for given Primary Keywords, Secondary keywords, and extensions
+     ```
+     python public_key_data_collector.py
+     ```
+  2. To run with other parameters, please use help.
+     ```
+     python public_key_data_collector.py  -h
+     ```
+  3. Training data for Public Keys and Tokens collected will be placed in **`xgitguard\output\public_key_train_source.csv`** folder
 
-- Run Variation Examples
+> **Note:** The data collection for public GitHub is optional.
+>
+> - If targeted data collected from Enterprise is enough to use, then we can skip the data collection & Label review process
 
-  ```
-  # Run for given Secondary Keyword and extension with training with Debug Console logging
-  python enterprise_cred_detections.py -s "password" -e "py" -t Yes -l 10 -c Yes
-  ```
+##### Review & Label the Collected Data:
 
-  ```
-  # Run for given Secondary Keyword and extension without training
-  python enterprise_cred_detections.py -s "password" -e "py"
-  ```
+1. By default, all the data collected will be labeled as 1 under column "Label" in collected training data indicating the collected secret as a valid one.
+2. **`User needs to review each row in the collected data and update the label value.`**
+   **`i.e: if the user thinks collected data is not a secret, then change the value to 0 for that particular row.`**
+3. By doing this, ML will have quality data for the model to reduce false positives.
 
-  ```
-  # Run with Secondary Keywords from config file and given list of extensions
-  python enterprise_cred_detections.py -e "py,txt"
-  ```
+> **Note:** Labelling the collected secret is an important process to use the ML effectively.
 
-  ```
-  # Run with Secondary Keywords and extensions from config files
-  python enterprise_cred_detections.py
-  ```
+##### Feature Engineering
 
-- Inputs used for Search and Scan
+Traverse into the "ml_training" folder
 
-  > **Note:** Command line argument keywords has precedence than config files (Default). If No keywords passed in cli, config files data will be used for search.
+- Credentials
 
-  - secondary_creds.csv file will have default list of credential relavent patterns for search
-  - extensions.csv file has default list of file extension to be searched
+  1.  Run with option cred for engineering collected cred data with public source data.
+      ```
+      python ml_feature_engineering.py cred -s public
+      ```
+  2.  In public mode, input will be public_cred_train_source.csv
+  3.  Engineered data for Public Creds output will be placed in **`xgitguard\output\public_cred_train.csv`** folder
 
-- GitHub Search Pattern for above Examples: **`password +extension:py`**
+- Keys & Tokens
 
-##### Enterprise Keys and Tokens Secrets Detection
-
-- Running the Keys and Tokens Secrets Detection script
-
-  ```
-  # Run with Default configs
-  python enterprise_key_detections.py
-  ```
-
-- Command Line Arguments
-
-  ```
-  Run usage:
-  enterprise_key_detections.py [-h] [-s Secondary Keywords] [-e Extensions] [-t Train Model] [-l Logger Level] [-c Console Logging]
-
-  optional arguments:
-    -h, --help            show this help message and exit
-    -s Secondary Keywords, --secondary_keywords Secondary Keywords
-                            Pass the Secondary Keywords list as comma separated string
-    -e Extensions, --extensions Extensions
-                            Pass the Extensions list as comma separated string
-    -t Train Model, --train_model Train Model
-                            Pass the Train Model as Yes or No. Default is No
-    -l Logger Level, --log_level Logger Level
-                            Pass the Logging level as for CRITICAL - 50, ERROR - 40 WARNING - 30 INFO - 20 DEBUG - 10. Default is 20
-    -c Console Logging, --console_logging Console Logging
-                            Pass the Console Logging as Yes or No. Default is Yes
-  ```
-
-- Run Variation Examples
-
-  ```
-  # Run for given Secondary Keyword and extension with training with Debug Console logging
-  python enterprise_key_detections.py -s "token" -e "py" -t Yes -l 10 -c Yes
-  ```
-
-  ```
-  # Run for given Secondary Keyword and extension without training
-  python enterprise_key_detections.py -s "token" -e "py"
-  ```
-
-  ```
-  # Run with Secondary Keywords from config file and given list of extensions
-  python enterprise_key_detections.py -e "py,txt"
-  ```
-
-  ```
-  # Run with Secondary Keywords and extensions from config files
-  python enterprise_key_detections.py
-  ```
-
-#### Enterprise Inputs and Outputs
+  1.  Run with option cred for engineering collected keys & tokens data with public source data.
+      ```
+      python ml_feature_engineering.py key -s public
+      ```
+  2.  In public mode, input will be public_key_train_source.csv
+  3.  Engineered data for Public Keys & Tokens output will be placed in **`xgitguard\output\public_key_train.csv`** folder
 
 > **Note:**
-> Command line argument keywords has precedence than config files (Default).
-> If No keywords passed in cli, config files data will be used for search.
+>
+> - Data collection & feature engineering for public GitHub scan is optional.
+> - When public training data not available, feature engineering will use enterprise source data.
 
-- GitHub Search Pattern for above Examples: **`token +extension:py`**
+##### ML Model Creation for Public GitHub
 
-##### Input Files
+Traverse into the "ml_training" folder
 
-```
-1. secondary_keys.csv file will have default list of keys & tokens relavent patterns for search
-2. extensions.csv file has default list of file extension to be searched
-```
-
-##### Output Files
-
-- **Credentials**
+- Run training with Cred Training Data and persist model with public source data
 
   ```
-    1. Hashed Url Files: xgitguard\config\enterprise_hashed_url_creds.csv
-        - List pf previously Processed Search urls. Urls stored will be skipped in next run to avoid re processing.
-    2. Secrets Detectec: xgitguard\config\xgg_enterprise_creds_detected.csv
-    3. Log File: xgitguard\config\enterprise_key_detections_*current run time yyyymmdd_hhmmss*.log
+  python model.py cred -s public
   ```
 
-- **Keys & Tokens**
+- Run training with Key Training Data and persist model with public source data
 
   ```
-    1. Hashed Url Files: xgitguard\config\enterprise_hashed_url_keys.csv
-        - List pf previously Processed Search urls. Urls stored will be skipped in next run to avoid re processing.
-    2. Secrets Detectec: xgitguard\config\xgg_enterprise_keys_detected.csv
-    3. Log File: xgitguard\config\enterprise_key_detections_*yyyymmdd_hhmmss*.log
+  python model.py key -s public
   ```
 
-### Public Github Secrets Detection
-
-#### Configuration Data Setup
-
-- Setup below Environment variables for accessing GitHub
-  - **`GITHUB_TOKEN`** - Public GitHub API Token with full Scopes of repo and user.
-    - Refer GitHub Docs [How To Get GitHub API Token] for help
-- Config Data folder **`xgitguard\config\*`**
-
-#### ML Model Setup and Training
-
-- ML Data Setup and Training- Follow [ML Model Process](#ml-model-process)
-
-#### Running Public Secret Detection
-
-##### Pre-Setup
-
-- Traverse into the `github-public` script folder
-
-```
-cd github-public
-```
-
-##### Public Credential Secrets Detection
-
-- Running the Credential Secrets Detection script
-
-```
-# Run with Default configs
-python public_cred_detections.py
-```
-
-- Command Line Arguments
-
-```
-Run usage:
-usage: public_cred_detections.py [-h] [-p Primary Keywords] [-s Secondary Keywords] [-e Extensions] [-t Train Model] [-l Logger Level] [-c Console Logging]
-
-optional arguments:
--h, --help show this help message and exit
--p Primary Keywords, --primary_keywords Primary Keywords
-Pass the Primary Keywords list as comma separated string
--s Secondary Keywords, --secondary_keywords Secondary Keywords
-Pass the Secondary Keywords list as comma separated string
--e Extensions, --extensions Extensions
-Pass the Extensions list as comma separated string
--t Train Model, --train_model Train Model
-Pass the Train Model as Yes or No. Default is No
--l Logger Level, --log_level Logger Level
-Pass the Logging level as for CRITICAL - 50, ERROR - 40 WARNING - 30 INFO - 20 DEBUG - 10. Default is 20
--c Console Logging, --console_logging Console Logging
-Pass the Console Logging as Yes or No. Default is Yes
-```
-
-- Run Variation Examples
-
-```
-# Run for given Primary Keyword, Secondary Keyword and extension with training with Debug Console logging
-
-python public_cred_detections.py -p "abc.xyz.com" -s "password" -e "py" -t Yes -l 10 -c Yes
-```
-
-```
-# Run for given Primary Keyword, Secondary Keyword and extension without training
-python public_cred_detections.py -p "abc.xyz.com" -s "password" -e "py
-```
-
-```
-# Run with Primary Keywords, Secondary Keywords from config file and given list of extensions
-python public_cred_detections.py -e "py,txt"
-```
-
-```
-# Run with Primary Keywords, Secondary Keywords and extensions from config files
-python public_cred_detections.py
-```
-
-- Inputs used for Search and Scan
-
+- For help on command line arguments, run
+  ```
+  python model.py  -h
+  ```
   > **Note:**
-  > Command line argument keywords has precedence than config files (Default).
-  > If No keywords passed in cli, config files data will be used for search.
+  >
+  > - If persisted model **xgitguard\output\public\_\*xgg\*.pickle** is not present in the output folder, then use feature engineered data to create a model and persist it.
+  > - By default, when feature engineered data collected in Public mode not available, then model creation will be using enterprise-based engineered data.
 
-- primary_keywords.csv file will have default list of primary keyword relavent patterns for search
-- secondary_creds.csv file will have default list of credential relavent patterns for search
-- extensions.csv file has default list of file extension to be searched
+### Additional Important Notes
 
-- GitHub Search Pattern for above Examples: **`abc.xyz.com password +extension:py`**
-
-##### Public Keys and Tokens Secrets Detection
-
-- Running the Keys and Tokens Secrets Detection script
-
-```
-# Run with Default configs
-python public_key_detections.py
-```
-
-- Command Line Arguments
-
-```
-usage:
-public_key_detections.py [-h] [-s Secondary Keywords] [-e Extensions] [-t Train Model] [-l Logger Level] [-c Console Logging]
-
-optional arguments:
--h, --help show this help message and exit
--s Secondary Keywords, --secondary_keywords Secondary Keywords
-Pass the Secondary Keywords list as comma separated string
--e Extensions, --extensions Extensions
-Pass the Extensions list as comma separated string
--t Train Model, --train_model Train Model
-Pass the Train Model as Yes or No. Default is No
--l Logger Level, --log_level Logger Level
-Pass the Logging level as for CRITICAL - 50, ERROR - 40 WARNING - 30 INFO - 20 DEBUG - 10. Default is 20
--c Console Logging, --console_logging Console Logging
-Pass the Console Logging as Yes or No. Default is Yes
-```
-
-- Run Variation Examples
-
-```
-# Run for given Primary Keyword, Secondary Keyword and extension with training with Debug Console logging
-python public_key_detections.py -p "abc.xyz.com" -s "token" -e "py" -t Yes -l 10 -c Yes
-```
-
-```
-# Run for given Primary Keyword, Secondary Keyword and extension without training
-python public_key_detections.py -p "abc.xyz.com" -s "token" -e "py"
-```
-
-```
-# Run with Primary Keywords, Secondary Keywords from config file and given list of extensions
-python public_key_detections.py -e "py,txt"
-```
-
-```
-# Run with Primary Keywords, Secondary Keywords and extensions from config files
-python public_key_detections.py
-```
-
-#### Public Inputs and Outputs
-
-> **Note:**
-> Command line argument keywords has precedence than config files (Default).
-> If No keywords passed in cli, config files data will be used for search.
-
-- GitHub Search Pattern for above Examples: **`token +extension:py`**
-
-##### Input Files
-
-```
-1. primary_keywords.csv file will have default list of primary keyword relavent patterns for search
-2. secondary_keys.csv file will have default list of keys & tokens relavent patterns for search
-3. extensions.csv file has default list of file extension to be searched
-```
-
-##### Output Files
-
-- **Credentials**
-
-  ```
-    1. Hashed Url Files: xgitguard\config\public_hashed_url_creds.csv
-        - List pf previously Processed Search urls. Urls stored will be skipped in next run to avoid re processing.
-    2. Secrets Detectec: xgitguard\config\xgg_public_creds_detected.csv
-    3. Log File: xgitguard\config\public_key_detections_*current run time yyyymmdd_hhmmss*.log
-  ```
-
-- **Keys & Tokens**
-
-  ```
-    1. Hashed Url Files: xgitguard\config\public_hashed_url_keys.csv
-        - List pf previously Processed Search urls. Urls stored will be skipped in next run to avoid re processing.
-    2. Secrets Detectec: xgitguard\config\xgg_public_keys_detected.csv
-    3. Log File: xgitguard\config\public_key_detections_*yyyymmdd_hhmmss*.log
-  ```
-
-### Usage Note:
-
-- User can add additional extensions to extensions.csv to search type of files other than default list.
-- User can enhance secondary_creds.csv/secondary_keys.csv by adding new patterns to do search other than default list.
+- Users can update confidence_values.csv based on secondary_keys, secondary_creds, extensions value and give scoring from level 0 (lowest) to 5 (highest) to denote associated keyword suspiciousness.
+- If users need to add any custom/new secondary creds/keys or extensions to the config files, then the same has to be added in the confidence_values.csv file with respective score level.
+- Stop Words provided in config files are very limited and generic.Users need to update stop_words.csv with keywords considered has false postives to filter it out from the detections.
+- Users can add additional extensions to extensions.csv to search types of files other than the default list.
+- Users can enhance secondary_creds.csv/secondary_keys.csv by adding new patterns to do searches other than the default list.
+- Users need to add primary keywords for public search in primary_keywords.csv after removing the sample content.
+- In case of GitHub API calls resulting in 403 due to API rate-limit, increase the sleep time before each API call in file "xgitguard/common/github_calls.py".
 
 ## License
 

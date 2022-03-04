@@ -26,7 +26,7 @@ def create_logger(log_level=20, console_logging=True, log_dir=None, log_file_nam
     Create logging class and return
     params: log_level - int - Default - 10
     returns: console_logging - Boolean - Default - True
-    returns: log_dir - string - optinal
+    returns: log_dir - string - optional
     returns: log_file_name - string - optional
     returns: logger - logging class
     """
@@ -38,7 +38,7 @@ def create_logger(log_level=20, console_logging=True, log_dir=None, log_file_nam
     logger.setLevel(log_level)
 
     formatter = logging.Formatter(
-        "[%(asctime)s] [ %(levelname)8s ] [%(filename)30s:%(funcName)30s] : %(message)s"
+        "[%(asctime)s] [ %(levelname)8s ] [%(filename)40s:%(funcName)30s] : %(message)s"
     )
 
     # add file handler to logger
@@ -58,7 +58,7 @@ def set_file_handler(logger_name, formatter, log_dir, log_file_name):
     else:
         module_dir = os.path.dirname(os.path.realpath(__file__))
         log_dir = os.path.abspath(
-            os.path.join(os.path.dirname(module_dir), ".", "config")
+            os.path.join(os.path.dirname(module_dir), ".", "logs")
         )
     if not log_file_name:
         log_file_name = f"{logger_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
@@ -81,14 +81,16 @@ if __name__ == "__main__":
     from configs_read import ConfigsData
 
     configs = ConfigsData()
+    module_dir = os.path.dirname(os.path.realpath(__file__))
+    log_dir = os.path.abspath(os.path.join(os.path.dirname(module_dir), ".", "logs"))
 
     logger = create_logger(
         log_level=10,
         console_logging=False,
-        log_dir=configs.config_dir,
+        log_dir=log_dir,
         log_file_name=f"{os.path.basename(__file__).split('.')[0]}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log",
     )
-    
+
     logger.debug("A debug message")
     logger.info("An info message")
     logger.warning("Something is not right.")

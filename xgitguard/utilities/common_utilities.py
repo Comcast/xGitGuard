@@ -16,6 +16,28 @@ limitations under the License.
 SPDX-License-Identifier: Apache-2.0
 """
 import re
+import os
+
+
+def check_github_token_env(token_env):
+    """
+    For the Given GITHUB Type, check whether ENV and URL set properly or not
+    ### Need GitHub Auth Token as Env variable named "GITHUB_TOKEN" for Public
+    ### Need GitHub Auth Token as Env variable named "GITHUB_ENTERPRISE_TOKEN" for Enterprise
+    params: token_env - string
+
+    returns: (1,0), token_var
+    """
+
+    if token_env == "public":
+        token_var = "GITHUB_TOKEN"
+    else:
+        token_var = "GITHUB_ENTERPRISE_TOKEN"
+
+    if os.getenv(token_var):
+        return 1, token_var
+
+    return 0, token_var
 
 
 def is_num_present(word):
@@ -40,7 +62,7 @@ def is_uppercase_present(word):
 
 def is_special_chars_present(word):
     """
-    Check if any special characterss present in Given String
+    Check if any special characters present in Given String
     params: word - string
     returns: 0 or 1
     """

@@ -16,41 +16,24 @@ limitations under the License.
 SPDX-License-Identifier: Apache-2.0
 """
 """
-xGitGuard Public GitHub Credential Detection Process
-    xGitGuard detects the secret keys and tokens present in the public Github repository
-    When Primary Keyword is given, run GitHub search with Primary Keyword
-    Else, run search with Secondary Keywords and Extension combination
+xGitGuard Enterprise GitHub Credential ML Data Collection process
     Steps:
-        - Get Secondary Keywords and Extension file data from config path
-        - Prepare the search query list by combining Primary Keyword with each Secondary Keyword
-        - Loop over each extension for each search query
-            -- Search GitHub and get response data
-            -- Process the response urls
-            -- If url is already processed in previous runs, skip the same
-            -- Get the code content for the html urls
-            -- Clean the code content and extract Secrets
-            -- Detect the Secrets using RegEx and format Secret records
-            -- Predict the Secret data using ML model
-            -- Write the cleaned and detected url data
-    Example Commands:
-    By default all configuration keys will be taken from config files
+        Get Secondary Keywords and Extension file data from config path
+        Prepare the search query list with each Secondary Keyword
+        Loop over each extension for each search query
+            Search GitHub and get response data
+            Process the response urls
+            If url is already processed in previous runs, skip the same
+            Get the code content for the html urls
+            Clean the code content and extract Secrets
+            Detect the Secrets using RegEx and format Secret records
+            Write the cleaned and detected url data
+    calling Examples:
+    By default the all configuration keys will be taken from config files
 
-    # Run with Primary Keywords, Secondary Keywords and Extensions from config files:
-    python public_cred_detections.py
-    
-    # Run with Primary Keywords, Secondary Keywords and Extensions from config files with ML:
-    python public_cred_detections.py -m Yes
-
-    # Run with Primary Keywords, Secondary Keywords from config file and given list of Extensions:
-    python public_cred_detections.py -e "py,txt"
-    
-    # Run for given Primary Keyword, Secondary Keyword and Extension without ML prediction:
-    python public_cred_detections.py -p "abc.xyz.com" -s "password" -e "py
-    
-    # Run for given Primary Keyword, Secondary Keyword and Extension with ML prediction and debug console logging:
-    python public_cred_detections.py -p "abc.xyz.com" -s "password" -e "py" -m Yes -l 10 -c Yes
+    # Run with Secondary Keywords and extensions from config files
+    python enterprise_cred_data_collector.py
 """
-
 
 import argparse
 import hashlib
@@ -58,35 +41,23 @@ import math
 import os
 import re
 import sys
-from datetime import datetime
 import time
+from datetime import datetime
+
 import pandas as pd
 from urlextract import URLExtract
 
 MODULE_DIR = os.path.dirname(os.path.realpath(__file__))
-parent_dir = os.path.dirname(MODULE_DIR)
+parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(MODULE_DIR)))
 sys.path.insert(0, parent_dir)
 
 from common.configs_read import ConfigsData
-from common.data_format import (
-    credential_extractor,
-    format_commit_details,
-    remove_url_from_creds,
-)
-from common.github_calls import (
-    get_github_public_commits,
-    public_url_content_get,
-    run_github_search,
-)
-
+from common.data_format import credential_extractor, remove_url_from_creds
+from common.github_calls import enterprise_url_content_get, run_github_search
 from common.logger import create_logger
-from common.ml_process import entropy_calc, ml_prediction_process
-from ml_training.model import xgg_train_model
-from utilities.common_utilities import mask_data
-from utilities.file_utilities import write_to_csv_file
+from common.ml_process import entropy_calc
 from utilities.common_utilities import check_github_token_env
-
-file_prefix = "xgg_"
+from utilities.file_utilities import write_to_csv_file
 
 
 def calculate_confidence(secondary_keyword, extension, secret):
@@ -110,9 +81,7 @@ def calculate_confidence(secondary_keyword, extension, secret):
     except:
         # Get the dictionary_words from dictionary words file
         configs.read_dictionary_words(file_name="dictionary_words.csv")
-        logger.info(
-            "Reading dictionary_words.csv file completed. Proceeding for search result processing"
-        )
+        logger.info("Reading dictionary_words.csv file completed. Proceeding for search result processing")
 
     secondary_keyword_value = int(
         configs.confidence_values.loc[secondary_keyword]["value"]
@@ -130,55 +99,37 @@ def calculate_confidence(secondary_keyword, extension, secret):
     return [sum([secondary_keyword_value, extension_value]), entro, d_match[0]]
 
 
-def format_detection(pkeyword, skeyword, url, code_content, secrets, keyword_counts):
+def format_detection(skeyword, org_url, url, code_content, secrets, skeyword_count):
     """
     Format the secret data from the given code content and other data
         Format the secrets data in the required format
-        Get the commit details from github
         Calculate the secrets confidence values
-        Mask the secret if present
         Return the final formatted detections
 
-    params: pkeyword - string - Primary Keyword
     params: skeyword - string - Secondary Keyword
+    params: org_url - string - github url
     params: url - string - github url
     params: code_content - list - User code content
     params: secrets - list - Detected secrets list
-    params: keyword_counts - int - keywords count
+    params: skeyword_count - int - secondary keyword count
     returns: secrets_data_list - list - List of formatted detections
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
     valid_secret = False
     secrets_data_list = []
     secret_data = []
-    global unmask_secret
 
-    extension = url.split(".")[-1]
-    user_name = url.split("/")[3]
-    repo_name = url.split("/")[4]
-    raw_url = url.replace("raw.githubusercontent.com", "github.com")
-    raw_url_splits = raw_url.split(repo_name)
-    raw_url = raw_url_splits[0] + repo_name + "/blob" + raw_url_splits[1]
+    extension = org_url.split(".")[-1]
+    user_name = org_url.split("/")[3]
+    repo_name = org_url.split("/")[4]
 
-    try:
-        file_path = "/".join(raw_url_splits[1].split("/")[2:])
-        commits_api_url = configs.xgg_configs["github"]["public_commits_url"].format(
-            user_name=user_name, repo_name=repo_name, file_path=file_path
-        )
-        api_response_commit_data = get_github_public_commits(commits_api_url)
-        commit_details = format_commit_details(api_response_commit_data)
-    except Exception as e:
-        logger.warning(f"Github commit content formation error: {e}")
-        commit_details = {}
-
-    secret_data.insert(0, commit_details)
     secret_data.insert(0, repo_name)
     secret_data.insert(0, user_name)
-    secret_data.insert(0, raw_url)
+    secret_data.insert(0, org_url)
     secret_data.insert(0, extension)
     secret_data.insert(0, skeyword)
-    secret_data.insert(0, pkeyword)
-    secret_data.insert(0, "xGG_Public_Credential")
+    secret_data.insert(0, "xGG_Enterprise_Credential")
+    logger.debug("<<<< 'Current Executing Function calculate_confidence loop' >>>>")
     for secret in secrets:
         # Calculate confidence values for detected secrets
         confidence_score = calculate_confidence(skeyword, extension, secret)
@@ -222,15 +173,10 @@ def format_detection(pkeyword, skeyword, url, code_content, secrets, keyword_cou
                         valid_secret = True
                         break
             if valid_secret:
-                if unmask_secret:
-                    masked_secret = code_line
-                else:
-                    # Mask the current secret
-                    masked_secret = mask_data(code_line, secret)
-                valid_secret_row.append(masked_secret)
+                valid_secret_row.append(code_line)
                 valid_secret_row.append(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                 valid_secret_row.append(confidence_score[0])
-                count_score = math.log2(50) / (math.log2(sum(keyword_counts) + 1) + 1)
+                count_score = math.log2(50) / (math.log2(skeyword_count + 1) + 1)
                 valid_secret_row.append(count_score)
                 valid_secret_row.append(confidence_score[1])
                 d_match = math.log2(100) / (math.log2(confidence_score[2] + 1) + 1)
@@ -250,7 +196,7 @@ def format_detection(pkeyword, skeyword, url, code_content, secrets, keyword_cou
     return secrets_data_list
 
 
-def process_search_urls(url_list, search_query):
+def process_search_urls(org_urls_list, url_list, search_query):
     """
     Process the Search html url as below
         Get code content from GitHub for the html url
@@ -259,22 +205,24 @@ def process_search_urls(url_list, search_query):
         Format the secrets detected
         Return the secrets detected
 
+    params: org_urls_list - list - list of html urls to get code content
     params: url_list - list - list of html urls to get code content
     params: search_query - string
     returns: secrets_data_list - list - Detected secrets data
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
     # Processes search findings
-    pkeyword = search_query.split(" ")[0].strip()
-    skeyword = search_query.split(" ")[1].strip()
+    skeyword = search_query.split('"')[1].strip()
     secrets_data_list = []
     extractor = URLExtract()
     try:
         for url in url_list:
-            code_content_response = public_url_content_get(url)
+            header = configs.xgg_configs["github"]["enterprise_header"]
+            code_content_response = enterprise_url_content_get(url, header)
             if code_content_response:
                 code_content = code_content_response.text
             else:
+                logger.debug("No response for url content get call")
                 continue
 
             try:
@@ -309,13 +257,12 @@ def process_search_urls(url_list, search_query):
 
             secrets_data = credential_extractor(code_contents, configs.stop_words)
 
-            keyword_counts = [
-                (code_content.lower().count(pkeyword.lower())),
-                (code_content.lower().count(skeyword.lower())),
-            ]
+            skeyword_count = code_content.lower().count(skeyword.lower())
+
             if len(secrets_data) >= 1 and len(secrets_data) <= 20:
+                org_url = org_urls_list[url_list.index(url)]
                 secret_data_list = format_detection(
-                    pkeyword, skeyword, url, code_content, secrets_data, keyword_counts
+                    skeyword, org_url, url, code_content, secrets_data, skeyword_count
                 )
                 if secret_data_list:
                     for secret_data in secret_data_list:
@@ -329,7 +276,7 @@ def process_search_urls(url_list, search_query):
     return secrets_data_list
 
 
-def check_existing_detections(url_list, search_query):
+def check_existing_detections(org_url_list, url_list, search_query):
     """
     Check whether the current urs where processed in previous runs
     for each url in url list
@@ -338,15 +285,17 @@ def check_existing_detections(url_list, search_query):
         if not present add them to further process
         skip if its already present in detected urls
 
+    params: org_url_list - List - List of original result urls
     params: url_list - List - List of search result urls
     params: search_query - String - Search query string
 
+    returns: new_org_url_list - List - New original url list
     returns: new_urls_list - List - New url list
     returns: new_hashed_urls - List - New Url Hash detected
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
-    new_urls_list, new_hashed_urls = [], []
-    global file_prefix
+
+    new_org_url_list, new_urls_list, new_hashed_urls = [], [], []
 
     # Get the Already predicted hashed url list if present
     try:
@@ -354,7 +303,7 @@ def check_existing_detections(url_list, search_query):
         if configs.hashed_urls:
             pass
     except:
-        configs.read_hashed_url(file_name=file_prefix + "public_hashed_url_creds.csv")
+        configs.read_hashed_url(file_name="train_enterprise_hashed_url_creds.csv")
 
     if url_list:
         for url in url_list:
@@ -362,15 +311,16 @@ def check_existing_detections(url_list, search_query):
             hashed_url = hashlib.md5(url_to_hash.encode()).hexdigest()
             new_hashed_url = []
             if not hashed_url in configs.hashed_urls:
+                new_org_url_list.append(org_url_list[url_list.index(url)])
                 new_urls_list.append(url)
                 new_hashed_url.append(hashed_url)
                 new_hashed_url.append(url)
             if new_hashed_url:
                 new_hashed_urls.append(new_hashed_url)
-    return new_urls_list, new_hashed_urls
+    return new_org_url_list, new_urls_list, new_hashed_urls
 
 
-def process_search_results(search_response_lines, search_query, ml_prediction):
+def process_search_results(search_response_lines, search_query):
     """
     For each search response items, process as below
         Get the html urls from the search response
@@ -379,48 +329,47 @@ def process_search_results(search_response_lines, search_query, ml_prediction):
         Get the user code content for the html url
         Format and clean the code content
         Find the secrets
-        Format the detections
-        Run the ML prediction on the detection
-        If detection is predicted, write the detections
+        Format and write data
         Write the hashed urls to file
 
     params: search_response_lines - list
     params: search_query - string
-    params: ml_prediction - boolean
 
     returns: detection_writes_per_query - int - Total detections written to file
     returns: new_results_per_query - int - No of new urls per query
     returns: detections_per_query - int - No of detections per search
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
-
     detection_writes_per_query = 0
     new_results_per_query = 0
     detections_per_query = 0
     new_hashed_urls = []
-    global file_prefix
 
-    url_list = []
+    url_list, org_url_list = [], []
     hashed_urls_file = os.path.join(
-        configs.output_dir, file_prefix + "public_hashed_url_creds.csv"
+        configs.output_dir, "train_enterprise_hashed_url_creds.csv"
     )
     for line in search_response_lines:
         html_url = line["html_url"]
-        html_url = html_url.replace("blob/", "")
-        html_url = html_url.replace(
-            "https://github.com", "https://raw.githubusercontent.com"
+        org_url_list.append(html_url)
+        html_url = (
+            configs.xgg_configs["github"]["enterprise_pre_url"]
+            + line["repository"]["full_name"]
+            + "/contents/"
+            + line["path"]
         )
         url_list.append(html_url)
 
     if url_list:
         # Check if current url is processed in previous runs
-        new_urls_list, new_hashed_urls = check_existing_detections(
-            url_list, search_query
+        new_org_urls_list, new_urls_list, new_hashed_urls = check_existing_detections(
+            org_url_list, url_list, search_query
         )
-
         new_results_per_query = len(new_urls_list)
         if new_hashed_urls:
-            secrets_detected = process_search_urls(new_urls_list, search_query)
+            secrets_detected = process_search_urls(
+                new_org_urls_list, new_urls_list, search_query
+            )
             detections_per_query += len(secrets_detected)
             if secrets_detected:
                 try:
@@ -430,73 +379,52 @@ def process_search_results(search_response_lines, search_query, ml_prediction):
                     # logger.debug(f"secrets_detected: {secrets_detected}")
                     secrets_detected_df = pd.DataFrame(
                         secrets_detected,
-                        columns=configs.xgg_configs["secrets"]["public_data_columns"],
+                        columns=configs.xgg_configs["secrets"][
+                            "enterprise_data_collector_columns"
+                        ],
                     )
                 except Exception as e:
                     logger.error(
                         f"secrets_detected Dataframe creation failed. Error: {e}"
                     )
                     secrets_detected_df = pd.DataFrame(
-                        columns=configs.xgg_configs["secrets"]["public_data_columns"],
+                        columns=configs.xgg_configs["secrets"][
+                            "enterprise_data_collector_columns"
+                        ],
                     )
                 if not secrets_detected_df.empty:
-                    if ml_prediction == True:
-                        # for Reading training Data only one time
-                        try:
-                            if configs.training_data:
-                                pass
-                        except:
-                            configs.read_training_data(
-                                file_name="public_cred_train.csv"
-                            )
-
-                        secrets_ml_predicted = ml_prediction_process(
-                            model_name="public_xgg_cred_rf_model_object.pickle",
-                            training_data=configs.training_data,
-                            detection_data=secrets_detected_df,
-                            git_env="public",
+                    secrets_detected_df = secrets_detected_df[
+                        [
+                            "Secret",
+                            "Second_Key",
+                            "Extension",
+                            "Code",
+                            "Key_Weight",
+                            "SKey_Count",
+                            "Entropy",
+                            "Dictionary_Similarity",
+                            "Score",
+                        ]
+                    ]
+                    secrets_detected_df["Label"] = 1
+                    if not secrets_detected_df.empty:
+                        detection_writes_per_query += secrets_detected_df.shape[0]
+                        logger.debug(
+                            f"Current secrets_detected_df count: {secrets_detected_df.shape[0]}"
                         )
-
-                        if not secrets_ml_predicted.empty:
-                            detection_writes_per_query += secrets_ml_predicted.shape[0]
-                            secrets_ml_predicted = secrets_ml_predicted.drop(
-                                "Secret", 1
+                        try:
+                            secrets_detected_file = os.path.join(
+                                configs.output_dir, "cred_train_source.csv"
                             )
-                            logger.debug(
-                                f"Current secrets_ml_predicted count: {secrets_ml_predicted.shape[0]}"
+                            write_to_csv_file(
+                                secrets_detected_df, secrets_detected_file
                             )
-                            try:
-                                secrets_detected_file = os.path.join(
-                                    configs.output_dir,
-                                    "xgg_ml_public_creds_detected.csv",
-                                )
-                                write_to_csv_file(
-                                    secrets_ml_predicted, secrets_detected_file
-                                )
-                            except Exception as e:
-                                logger.error(f"Process Error: {e}")
-                    else:
-                        if not secrets_detected_df.empty:
-                            detection_writes_per_query += secrets_detected_df.shape[0]
-                            secrets_detected_df = secrets_detected_df.drop(
-                                "Secret", axis=1
-                            )
-                            logger.debug(
-                                f"Current secrets_detected_df count: {secrets_detected_df.shape[0]}"
-                            )
-                            try:
-                                secrets_detected_file = os.path.join(
-                                    configs.output_dir, "xgg_public_creds_detected.csv"
-                                )
-                                write_to_csv_file(
-                                    secrets_detected_df, secrets_detected_file
-                                )
-                            except Exception as e:
-                                logger.error(f"Process Error: {e}")
+                        except Exception as e:
+                            logger.error(f"Process Error: {e}")
 
                 else:
                     logger.debug(
-                        "secrets_detected_df is empty. So skipping ML prediction."
+                        "secrets_detected_df is empty. So skipping collection."
                     )
             else:
                 logger.info("No Secrets in current search results")
@@ -518,36 +446,25 @@ def process_search_results(search_response_lines, search_query, ml_prediction):
     return detection_writes_per_query, new_results_per_query, detections_per_query
 
 
-def format_search_query_list(primary_keyword, secondary_keywords):
+def format_search_query_list(secondary_keywords):
     """
-    Create the search query list using Primary Keyword and Secondary Keywords
-    params: primary_keyword - string
+    Create the search query list using Secondary Keywords
     params: secondary_keywords - list
     returns: search_query_list - list
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
     search_query_list = []
     # Format GitHub Search Query
-    if primary_keyword:
-        for secondary_keyword in secondary_keywords:
-            search_query_list.append(primary_keyword + " " + secondary_keyword)
-    else:
-        search_query_list = secondary_keywords.copy()
-
+    for secondary_keyword in secondary_keywords:
+        search_query_list.append('"' + secondary_keyword + '"')
     logger.info(f"Total search_query_list count: {len(search_query_list)}")
     return search_query_list
 
 
-def run_detection(
-    primary_keyword="",
-    secondary_keywords=[],
-    extensions=[],
-    ml_prediction=False,
-):
+def run_data_collector(secondary_keywords=[], extensions=[]):
     """
     Run GitHub detections
-    If Primary Keyword is Given, run search with Primary Keyword
-    Else run search with Secondary Keywords and extension combination
+    Run search with Secondary Keywords and extension combination
     Steps:
         Get Secondary Keywords and Extension file data from config path
         Prepare the search query list by combining Primary Keyword with each Secondary Keyword
@@ -558,30 +475,21 @@ def run_detection(
             Get the code content for the html urls
             Clean the code content and extract secrets
             Detect the secrets using RegEx and format secret records
-            Predict the secret data using ML model
             Write the cleaned and detected secret data
 
-    params: primary_keyword - string - optional
     params: secondary_keywords - list - optional
     params: extensions - list - optional
-    params: ml_prediction - Boolean - optional - Default: False
     returns: True or False
 
     Examples:
-    Run without Primary Keyword and Secondary Keywords and extensions from config files
-        run_detection()
+    Run for Data collection for preparing model Features
+        run_data_collector()
 
-    Run for xGG Scan with ML
-        run_detection(ml_prediction=True)
+    Run for given Secondary Keyword and extension
+        run_data_collector(secondary_keywords=["auth"], extensions=["py"])
 
-    Run for given Primary Keyword, Secondary Keyword and extension with ml prediction
-        run_detection(primary_keyword='my Keyword', secondary_keywords=["auth"], extensions=["py"], ml_prediction=True)
-
-    Run for given Primary Keyword, Secondary Keyword and extension without ml prediction
-        run_detection(primary_keyword='my Keyword', secondary_keywords=["auth"], extensions=["py"])
-
-    Run without Primary Keyword, Secondary Keywords from config file and given list of extensions
-        run_detection(extension = ["py","txt"])
+    Run without Secondary Keywords from config file and given list of extensions
+        run_data_collector(extension = ["py","txt"])
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
     # Read and Setup Global Configuration Data to reference in all process
@@ -615,42 +523,14 @@ def run_detection(
         configs.read_extensions(file_name="extensions.csv")
     logger.info(f"Total Extensions: {len(configs.extensions)}")
 
-    if primary_keyword:
-        logger.info(f"Primary Keyword: {primary_keyword}")
-        total_search_pairs = len(configs.secondary_keywords) * len(configs.extensions)
-    else:
-        logger.error(
-            f"No Primary Keywords in Primary_keywords.csv.Please add appropriate domain names or keywords as per requirement.Also refer Readme for more details"
-        )
-        total_search_pairs = len(configs.secondary_keywords) * len(configs.extensions)
-        sys.exit()
+    total_search_pairs = len(configs.secondary_keywords) * len(configs.extensions)
     logger.info(f"Total Search Pairs: {total_search_pairs}")
 
     total_processed_search, total_detection_writes = 0, 0
     search_query_list = []
     # Format GitHub Search Query List
-    search_query_list = format_search_query_list(
-        primary_keyword, configs.secondary_keywords
-    )
-    if search_query_list:
-        if ml_prediction:
-            # Train Model if not present Already
-            model_file = os.path.join(
-                configs.output_dir, "public_xgg_cred_rf_model_object.pickle"
-            )
-            if os.path.exists(model_file):
-                logger.info(
-                    f"Detection process will use Already persisted Trained Model present in: {model_file}"
-                )
-            else:
-                logger.info(
-                    f"No persisted Trained Model present. So training and persisting a model now"
-                )
-                xgg_train_model(
-                    training_data_file="public_cred_train.csv",
-                    model_name="public_xgg_cred_rf_",
-                )
-    else:
+    search_query_list = format_search_query_list(configs.secondary_keywords)
+    if not search_query_list:
         logger.info(f"No Search query to process. Ending.")
         sys.exit(1)
 
@@ -666,12 +546,12 @@ def run_detection(
             try:
                 # Search GitHub and return search response confidence_score
                 total_processed_search += 1
-                time.sleep(2)
+                # time.sleep(2)
                 search_response_lines = run_github_search(
-                    configs.xgg_configs["github"]["public_api_url"],
+                    configs.xgg_configs["github"]["enterprise_api_url"],
                     search_query,
                     extension,
-                    "public",
+                    "enterprise",
                 )
                 # If search has detections, process the result urls else continue next search
                 if search_response_lines:
@@ -679,11 +559,7 @@ def run_detection(
                         detection_writes_per_query,
                         new_results_per_query,
                         detections_per_query,
-                    ) = process_search_results(
-                        search_response_lines,
-                        search_query,
-                        ml_prediction,
-                    )
+                    ) = process_search_results(search_response_lines, search_query)
                     logger.info(
                         f"Detection writes in current search query: {detection_writes_per_query}"
                     )
@@ -713,133 +589,6 @@ def run_detection(
     return True
 
 
-def run_detections_from_file(secondary_keywords=[], extensions=[], ml_prediction=False):
-    """
-    Run detection for Primary Keywords present in the default config file
-    params: secondary_keywords - list - optional
-    params: extensions - list - optional
-    params: ml_prediction - Boolean - optional - Default: False
-    returns: True or False
-    returns: None
-    """
-    logger.debug("<<<< 'Current Executing Function' >>>>")
-    # Setting Global configuration Data
-    global configs
-    configs = ConfigsData()
-
-    # Get the Primary Keywords from Primary Keywords file
-    configs.read_primary_keywords(file_name="primary_keywords.csv")
-    if configs.primary_keywords:
-        total_key_runs, success_key_runs = 0, 0
-        for primary_keyword in configs.primary_keywords:
-            num_of_retry, max_retry = 0, 1
-            while num_of_retry < max_retry:
-                try:
-                    logger.info(
-                        f"Running GitHub Detection for Primary Keyword: {primary_keyword}"
-                    )
-                    status = run_detection(
-                        primary_keyword,
-                        secondary_keywords,
-                        extensions,
-                        ml_prediction,
-                    )
-                    status = True
-                except Exception as e:
-                    logger.error(f"GitHub Detection Error: {e}")
-                    status = False
-                    num_of_retry += 1
-                if status:
-                    success_key_runs += 1
-                    logger.info(
-                        f"Detection for Primary Keyword: {primary_keyword} - Run Status: {'Success' if status else 'Failure'}"
-                    )
-                    break
-            total_key_runs += 1
-            # break
-
-        logger.info(f"Total Primary Keyword Runs: {total_key_runs}")
-        logger.info(f"Total Successfull Runs: {success_key_runs}")
-    else:
-        logger.error(
-            f"No Primary Keywords in Primary_keywords.csv.Please add appropriate domain names or keywords as per requirement.Also refer Readme for more details"
-        )
-
-
-def run_detections_from_list(
-    primary_keywords,
-    secondary_keywords=[],
-    extensions=[],
-    ml_prediction=False,
-):
-    """
-    Run detection for Primary Keywords present in the given input list
-    Params: primary_keywords - list
-    params: secondary_keywords - list - optional
-    params: extensions - list - optional
-    params: ml_prediction - Boolean - optional - Default: False
-    returns: True or False
-    returns: None
-    """
-    logger.debug("<<<< 'Current Executing Function' >>>>")
-    if primary_keywords:
-        if type(primary_keywords) == list:
-            logger.info(
-                f"Running Detections from Primary Keywords List: {primary_keywords}"
-            )
-        elif type(primary_keywords) == str:
-            primary_keywords = primary_keywords.split(",")
-            logger.info(
-                f"Running Detections from Primary Keywords List: {primary_keywords}"
-            )
-        else:
-            logger.error(
-                f"Primary Keywords Given is not list or string. Please check the input Keys passed"
-            )
-            sys.exit()
-
-        total_key_runs, success_key_runs = 0, 0
-
-        # Setting Global configuration Data
-        global configs
-        configs = ConfigsData()
-        for primary_keyword in primary_keywords:
-            if primary_keyword is None:
-                continue
-
-            num_of_retry, max_retry = 0, 1
-            while num_of_retry < max_retry:
-                try:
-                    logger.info(
-                        f"Running GitHub Detections for Primary Keyword: {primary_keyword}"
-                    )
-                    status = run_detection(
-                        primary_keyword,
-                        secondary_keywords,
-                        extensions,
-                        ml_prediction,
-                    )
-                except Exception as e:
-                    logger.error(f"Process Error: {e}")
-                    status = False
-                    num_of_retry += 1
-                if status:
-                    success_key_runs += 1
-                    logger.info(
-                        f"Detection for Primary Keyword: {primary_keyword} - Run Status: {'Success' if status else 'Failure'}"
-                    )
-                    break
-            total_key_runs += 1
-
-        logger.info(f"Total Primary Keyword Runs: {total_key_runs}")
-        logger.info(f"Total Successfull Runs: {success_key_runs}")
-    else:
-        logger.error(
-            f"No Primary Keywords Given. Please check the input Keys List passed"
-        )
-        sys.exit()
-
-
 def setup_logger(log_level=10, console_logging=True):
     """
     Call logger create module and setup the logger for current run
@@ -859,32 +608,15 @@ def arg_parser():
     """
     Parse the command line Arguments and return the values
     params: None
-    returns: primary_keywords - list
     returns: secondary_keywords - list
     returns: extensions - list
-    returns: ml_prediction - Boolean - Default - False
-    returns: unmask_secret - Boolean - Default - False
     returns: log_level - int - Default - 20  - INFO
     returns: console_logging - Boolean - Default - True
     """
 
-    global file_prefix
-    global ml_prediction
-    global unmask_secret
-
     argparser = argparse.ArgumentParser()
     flag_choices = ["Y", "y", "Yes", "YES", "yes", "N", "n", "No", "NO", "no"]
     log_level_choices = [10, 20, 30, 40, 50]
-
-    argparser.add_argument(
-        "-p",
-        "--primary_keywords",
-        metavar="Primary Keywords",
-        action="store",
-        type=str,
-        default="",
-        help="Pass the Primary Keywords list as comma separated string",
-    )
     argparser.add_argument(
         "-s",
         "--secondary_keywords",
@@ -902,28 +634,6 @@ def arg_parser():
         type=str,
         default="",
         help="Pass the Extensions list as comma separated string",
-    )
-
-    argparser.add_argument(
-        "-m",
-        "--ml_prediction",
-        metavar="Validate using ML",
-        action="store",
-        type=str,
-        default="No",
-        choices=flag_choices,
-        help="Validate detections using ML",
-    )
-
-    argparser.add_argument(
-        "-u",
-        "--unmask_secret",
-        metavar="To write secret unmasked",
-        action="store",
-        type=str,
-        default="No",
-        choices=flag_choices,
-        help="To write secret unmasked",
     )
 
     argparser.add_argument(
@@ -950,10 +660,6 @@ def arg_parser():
 
     args = argparser.parse_args()
 
-    if args.primary_keywords:
-        primary_keywords = args.primary_keywords.split(",")
-    else:
-        primary_keywords = []
     if args.secondary_keywords:
         secondary_keywords = args.secondary_keywords.split(",")
     else:
@@ -962,17 +668,6 @@ def arg_parser():
         extensions = args.extensions.split(",")
     else:
         extensions = []
-
-    if args.ml_prediction.lower() in flag_choices[:5]:
-        ml_prediction = True
-        file_prefix = "xgg_ml_"
-    else:
-        ml_prediction = False
-
-    if args.unmask_secret.lower() in flag_choices[:5]:
-        unmask_secret = True
-    else:
-        unmask_secret = False
 
     if args.log_level in log_level_choices:
         log_level = args.log_level
@@ -983,25 +678,14 @@ def arg_parser():
     else:
         console_logging = False
 
-    return (
-        primary_keywords,
-        secondary_keywords,
-        extensions,
-        ml_prediction,
-        unmask_secret,
-        log_level,
-        console_logging,
-    )
+    return secondary_keywords, extensions, log_level, console_logging
 
 
 if __name__ == "__main__":
     # Argument Parsing
     (
-        primary_keywords,
         secondary_keywords,
         extensions,
-        ml_prediction,
-        unmask_secret,
         log_level,
         console_logging,
     ) = arg_parser()
@@ -1009,24 +693,14 @@ if __name__ == "__main__":
     # Setting up Logger
     setup_logger(log_level, console_logging)
 
-    logger.info("xGitGuard Credentials Detection Process Started")
-    if ml_prediction:
-        logger.info("Running the xGitGuard detection with ML Prediction filter")
-    else:
-        logger.info("Running the xGitGuard detection without ML Prediction filter")
-
-    valid_config, token_var = check_github_token_env("public")
+    logger.info("xGitGuard Enterprise Credentials Data Collection Process Started")
+    valid_config, token_var = check_github_token_env("enterprise")
     if not valid_config:
         logger.error(
-            f"GitHub API Token Environment variable '{token_var}' not set. API Search will fail/return no results. Please Setup and retry"
+            f"GitHub API Token Environment variable '{token_var}' is not set. API Search will fail/return no results. Please Setup and retry"
         )
         sys.exit(1)
 
-    if primary_keywords:
-        run_detections_from_list(
-            primary_keywords, secondary_keywords, extensions, ml_prediction
-        )
-    else:
-        run_detections_from_file(secondary_keywords, extensions, ml_prediction)
+    run_data_collector(secondary_keywords, extensions)
 
-    logger.info("xGitGuard Credentials Detection Process Completed")
+    logger.info("xGitGuard Enterprise Credentials Data Collection Process Completed")

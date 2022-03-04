@@ -45,7 +45,7 @@ def read_text_file(file_path):
             logger.error(f"File Read Error: {e}")
             return []
     else:
-        logger.error(f"File not present in : {file_path}")
+        logger.warning(f"File not present in : {file_path}")
         return []
 
 
@@ -68,7 +68,7 @@ def read_yaml_file(file_path):
             logger.error(f"File Read Error: {e}")
             return []
     else:
-        logger.error(f"File not present in : {file_path}")
+        logger.warning(f"File not present in : {file_path}")
         return []
 
 
@@ -97,12 +97,12 @@ def read_csv_file(file_path, output="list", header=0):
             file_dataframe = pd.DataFrame()
             return [] if output == "list" else file_dataframe
     else:
-        logger.error(f"File not present in : {file_path}")
+        logger.warning(f"File not present in : {file_path}")
         file_dataframe = pd.DataFrame()
         return [] if output == "list" else file_dataframe
 
 
-def write_to_csv_file(dataframe, csv_file_path, sep=","):
+def write_to_csv_file(dataframe, csv_file_path, sep=",", write_mode="append"):
     """
     Write to CSV file utility
         Write the Dataframe in the path given if file not present
@@ -119,7 +119,10 @@ def write_to_csv_file(dataframe, csv_file_path, sep=","):
         dataframe.to_csv(csv_file_path, mode="a", index=False, sep=sep)
         return True
     try:
-        if len(dataframe.columns) != len(
+        if write_mode == "overwrite":
+            dataframe.to_csv(csv_file_path, mode="w", index=False, sep=sep)
+            return True
+        elif len(dataframe.columns) != len(
             pd.read_csv(csv_file_path, nrows=1, sep=sep).columns
         ):
             logger.error(
@@ -142,7 +145,9 @@ def write_to_csv_file(dataframe, csv_file_path, sep=","):
                 "Columns and column order of dataframe and csv file do not match!!"
             )
         else:
-            dataframe.to_csv(csv_file_path, mode="a", index=False, sep=sep, header=False)
+            dataframe.to_csv(
+                csv_file_path, mode="a", index=False, sep=sep, header=False
+            )
             logger.debug("CSV file Write Successful")
             return True
     except pd.errors.EmptyDataError as e:

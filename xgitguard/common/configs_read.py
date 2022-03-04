@@ -43,6 +43,9 @@ class ConfigsData:
         self.config_dir = os.path.abspath(
             os.path.join(os.path.dirname(MODULE_DIR), ".", "config")
         )
+        self.output_dir = os.path.abspath(
+            os.path.join(os.path.dirname(MODULE_DIR), ".", "output")
+        )
         self.read_xgg_configs(file_name="xgg_configs.yaml")
 
     def read_xgg_configs(self, file_name):
@@ -77,7 +80,9 @@ class ConfigsData:
         self.primary_keywords = read_csv_file(
             self.primary_keywords_file, output="list", header=0
         )
-        self.primary_keywords = [item for sublist in self.primary_keywords for item in sublist]
+        self.primary_keywords = [
+            item for sublist in self.primary_keywords for item in sublist
+        ]
         # logger.debug(f"primary_keywords: {self.primary_keywords}")
 
     def read_secondary_keywords(self, file_name):
@@ -92,7 +97,9 @@ class ConfigsData:
         self.secondary_keywords = read_csv_file(
             self.secondary_keywords_file, output="list", header=0
         )
-        self.secondary_keywords = [item for sublist in self.secondary_keywords for item in sublist]
+        self.secondary_keywords = [
+            item for sublist in self.secondary_keywords for item in sublist
+        ]
         # logger.debug(f"secondary_keywords: {self.secondary_keywords}")
 
     def read_extensions(self, file_name="extensions.csv"):
@@ -110,25 +117,25 @@ class ConfigsData:
 
     def read_hashed_url(self, file_name):
         """
-        Read the given hashed url csv file in config path
+        Read the given hashed url csv file in output path
         Set the Class Variable for further use
         params: file_name - string
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
         # Loading Existing url hash detections
-        self.hashed_url_file = os.path.join(self.config_dir, file_name)
+        self.hashed_url_file = os.path.join(self.output_dir, file_name)
         hashed_key_urls = read_csv_file(self.hashed_url_file, output="list", header=0)
         self.hashed_urls = [row[0] for row in hashed_key_urls]
         # logger.debug(f"hashed_urls: {self.hashed_urls}")
 
     def read_training_data(self, file_name):
         """
-        Read the given training data csv file in config path
+        Read the given training data csv file in output path
         Set the Class Variable for further use
         params: file_name - string
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
-        self.training_data_file = os.path.join(self.config_dir, file_name)
+        self.training_data_file = os.path.join(self.output_dir, file_name)
         self.training_data = read_csv_file(
             self.training_data_file, output="dataframe", header=0
         )
@@ -226,68 +233,10 @@ if __name__ == "__main__":
     from datetime import datetime
     from common.logger import create_logger
 
-    log_dir = os.path.abspath(os.path.join(os.path.dirname(MODULE_DIR), ".", "config"))
+    log_dir = os.path.abspath(os.path.join(os.path.dirname(MODULE_DIR), ".", "logs"))
     log_file_name = f"{os.path.basename(__file__).split('.')[0]}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
     # Creates a logger
     logger = create_logger(
         log_level=10, console_logging=True, log_dir=log_dir, log_file_name=log_file_name
     )
     configs = ConfigsData()
-
-    # print(configs.xgg_configs)
-
-    # # Get the primary_keywords from primary_keywords file
-    # configs.read_primary_keywords(file_name="primary_keywords.csv")
-    # print(f"primary_keywords Count: {len(configs.primary_keywords)}")
-    # print(f"First item: {configs.primary_keywords[0]}")
-
-    # # Get the secondary_keywords from secondary_keywords file
-    # configs.read_secondary_keywords(file_name="secondary_keys.csv")
-    # print(f"secondary_keywords Count: {len(configs.secondary_keywords)}")
-    # print(f"First item: {configs.secondary_keywords[0]}")
-
-    # # Get the secondary_keywords from secondary_keywords file
-    # configs.read_secondary_keywords(file_name="secondary_creds.csv")
-    # print(f"secondary_keywords Count: {len(configs.secondary_keywords)}")
-    # print(f"First item: {configs.secondary_keywords[0]}")
-
-
-    # # Get the hashed url from hashed_url file
-    # configs.read_hashed_url(file_name="enterprise_hashed_url_creds.csv")
-    # print(f"hashed_url Count: {len(configs.hashed_urls)}")
-    # print(f"First item: {configs.hashed_urls[0]}")
-
-    # # Get the hashed url from hashed_url file
-    # configs.read_hashed_url(file_name="enterprise_hashed_url_keys.csv")
-    # print(f"hashed_url Count: {len(configs.hashed_urls)}")
-    # print(f"First item: {configs.hashed_urls[0]}")
-
-    # # Get the extensions from extensions file
-    # configs.read_extensions(file_name="extensions.csv")
-    # print(f"extensions Count: {len(configs.extensions)}")
-    # print(f"First item: {configs.extensions[0]}")
-
-    # # Get the training_data from trainig_data file
-    # configs.read_training_data(file_name="key_train.csv")
-    # print(f"training_data Count: {configs.training_data.shape[0]}")
-    # print(f"First item: {configs.training_data.values[0]}")
-
-    # # Get the training_data from training_data file
-    # configs.read_training_data(file_name="cred_train.csv")
-    # print(f"training_data Count: {configs.training_data.shape[0]}")
-    # print(f"First item: {configs.training_data.values[0]}")
-
-    # # Get the confidence_values from confidence values file
-    # configs.read_confidence_values(file_name="confidence_values.csv")
-    # print(f"confidence_values Count: {configs.confidence_values.shape[0]}")
-    # print(f"First item: {configs.confidence_values.values[0]}")
-
-    # # Get the dictionary_words from dictionary words file
-    # configs.read_dictionary_words(file_name="dictionary_words.csv")
-    # print(f"dictionary_words Count: {configs.dictionary_words.shape[0]}")
-    # print(f"First item: {configs.dictionary_words.values[0]}")
-
-    # # Get the stop_words from stop words file
-    # configs.read_stop_words(file_name="stop_words.csv")
-    # print(f"stop_words Count: {len(configs.stop_words)}")
-    # print(f"First item: {configs.stop_words[0]}")

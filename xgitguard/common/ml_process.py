@@ -35,7 +35,9 @@ from utilities.file_utilities import read_pickle_file
 logger = logging.getLogger("xgg_logger")
 
 
-def ml_prediction_process(model_name, training_data, detection_data):
+def ml_prediction_process(
+    model_name, training_data, detection_data, git_env="enterprise"
+):
     """
     for the given training data and detection data
         Format the detections snf training data as model needed
@@ -47,19 +49,37 @@ def ml_prediction_process(model_name, training_data, detection_data):
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
     pre_prediction_data = detection_data.copy()
-    detection_data.drop(
-        [
-            "Source",
-            "URL",
-            "Owner",
-            "Repo_Name",
-            "Detected_Timestamp",
-            "Year",
-            "Month",
-            "Day",
-        ],
-        1,
-    )
+    if git_env == "public":
+        detection_data = detection_data.drop(
+            [
+                "Source",
+                "Primary_Key",
+                "Commit_Details",
+                "URL",
+                "Owner",
+                "Repo_Name",
+                "Detected_Timestamp",
+                "Year",
+                "Month",
+                "Day",
+            ],
+            axis=1,
+        )
+    else:
+        detection_data = detection_data.drop(
+            [
+                "Source",
+                "Commit_Details",
+                "URL",
+                "Owner",
+                "Repo_Name",
+                "Detected_Timestamp",
+                "Year",
+                "Month",
+                "Day",
+            ],
+            axis=1,
+        )
     try:
         detection_data["Len_Key"] = detection_data.apply(
             lambda x: len(x["Secret"]), axis=1
@@ -74,7 +94,7 @@ def ml_prediction_process(model_name, training_data, detection_data):
             lambda x: is_uppercase_present(x["Secret"]), axis=1
         )
 
-        detection_data.drop(["Secret", "Code"], 1)
+        detection_data = detection_data.drop(["Secret", "Code"], axis=1)
         train_dummies = pd.get_dummies(training_data)
         detection_dummies = pd.get_dummies(detection_data)
         train_dummies, detection_dummies = train_dummies.align(
@@ -83,7 +103,7 @@ def ml_prediction_process(model_name, training_data, detection_data):
         detection_dummies = detection_dummies.fillna(0)
 
         config_dir = os.path.abspath(
-            os.path.join(os.path.dirname(MODULE_DIR), ".", "config")
+            os.path.join(os.path.dirname(MODULE_DIR), ".", "output")
         )
         model_file = os.path.join(config_dir, model_name)
         # Read pre trained Model object
@@ -104,7 +124,7 @@ def entropy_calc(labels, base=None):
     Calculates Shannon Entropy for given labels
     params: labels - list
     params: base - Optional
-    retunrs: entropy values - list
+    returns: entropy values - list
     """
     # logger.debug("<<<< 'Current Executing Function' >>>>")
     _, counts = np.unique(labels, return_counts=True)

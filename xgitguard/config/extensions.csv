@@ -23,6 +23,7 @@ config
 ini
 plist
 yaml
+yml
 fg
 gitignore
 key

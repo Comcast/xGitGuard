@@ -142,8 +142,6 @@ def keys_extractor(code_content):
         "Amazon MWS": "access_tokenn$productionn$[0-9a-z]f16gn$[0-9a-f]f32g",
         "PayPal": "amznn.mwsn.[0-9a-f]f8g-[0-9a-f]f4g-[0-9a-f]f4g-[0-9a-f]f4g-[0-9a-f]f12g",
         "Slack Token": "(xox[pbaor]-[0-9]{12}-[0-9]{12}-[0-9]{12}-[a-z0-9]{32})",
-        # "Facebook": 'facebook.*[\'\"][0-9a-f]{32}[\'\"]',
-        # "GitHub": 'github.*[[\'\"]0-9a-zA-Z]{35,40}[\'\"]',
         "AWS": "(?:.*awsSecretKey|.*aws_secret|.*api-key|.*aws_account_secret).*"
         "(?=.*[A-Z])(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=])",
         "Slack Webook": "T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8}/[a-zA-Z0-9_]{24}",

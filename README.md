@@ -157,7 +157,7 @@ python enterprise_cred_detections.py -m Yes
 
 ```
 Run usage:
-enterprise_cred_detections.py [-h] [-s Secondary Keywords] [-e Extensions] [-t Train Model] [-m ML Filter] [-d ML Training Data collection][-l Logger Level] [-c Console Logging]
+enterprise_cred_detections.py [-h] [-s Secondary Keywords] [-e Extensions] [-m Ml prediction][-u Unmask Secret][-l Logger Level] [-c Console Logging]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -221,7 +221,7 @@ python enterprise_key_detections.py -m Yes
 
 ```
 Run usage:
-enterprise_key_detections.py [-h] [-s Secondary Keywords] [-e Extensions] [-t Train Model] [-l Logger Level] [-c Console Logging]
+enterprise_key_detections.py [-h] [-s Secondary Keywords] [-e Extensions] [-m Ml prediction][-u Unmask Secret][-l Logger Level] [-c Console Logging]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -324,7 +324,7 @@ python public_cred_detections.py -m Yes
 
 ```
 Run usage:
-usage: public_cred_detections.py [-h] [-p Primary Keywords] [-s Secondary Keywords] [-e Extensions] [-t Train Model] [-l Logger Level] [-c Console Logging]
+usage: public_cred_detections.py [-h] [-p Primary Keywords] [-s Secondary Keywords] [-e Extensions] [-m Ml prediction][-u Unmask Secret] [-l Logger Level] [-c Console Logging]
 
 optional arguments:
 -h, --help show this help message and exit
@@ -391,7 +391,7 @@ python public_key_detections.py -m Yes
 
 ```
 usage:
-public_key_detections.py [-h] [-s Secondary Keywords] [-e Extensions] [-t Train Model] [-l Logger Level] [-c Console Logging]
+public_key_detections.py [-h] [-s Secondary Keywords] [-e Extensions] [-m Ml prediction][-u Unmask Secret] [-l Logger Level] [-c Console Logging]
 
 optional arguments:
 -h, --help show this help message and exit

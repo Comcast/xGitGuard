@@ -993,6 +993,7 @@ if __name__ == "__main__":
         configs.xgg_configs["github"]["public_api_url"],
         "public",
         configs.xgg_configs["github"]["public_commits_url"],
+        configs.xgg_configs["github"]["throttle_time"],
     )
 
     logger.info("xGitGuard Credentials Detection Process Started")

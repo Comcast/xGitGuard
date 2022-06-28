@@ -30,11 +30,13 @@ class GithubCalls:
         base_url,
         token_env,
         commits_api_url,
+        throttle_time=2
     ):
         assert token_env == "public" or token_env == "enterprise", f"token_env must be either 'public' or 'enterprise'. current: {token_env}"
         self._base_url = base_url
         self._token_env = token_env
         self._commits_api_url = commits_api_url
+        self._throttle_time = throttle_time
 
     def run_github_search(self, search_query, extension):
         """
@@ -63,7 +65,7 @@ class GithubCalls:
                 search_response = content["items"]
                 return search_response
             else:
-                time.sleep(2)
+                time.sleep(self._throttle_time)
                 logger.error(f"Search Response code: {response.status_code}. Continuing...")
         else:
             logger.error(
@@ -85,9 +87,9 @@ class GithubCalls:
         logger.debug("<<<< 'Current Executing Function' >>>>")
         if self._token_env == "public":
             token_var = "GITHUB_TOKEN"
-            time.sleep(3)
+            time.sleep(self._throttle_time)
         else:
-            time.sleep(2)
+            time.sleep(self._throttle_time)
             token_var = "GITHUB_ENTERPRISE_TOKEN"
             if "<< Enterprise Name >>" in self._base_url:
                 logger.error(
@@ -141,7 +143,7 @@ class GithubCalls:
             sys.exit(1)
 
         try:
-            time.sleep(3)
+            time.sleep(self._throttle_time)
             response = requests.get(
                 self._base_url, auth=("token", os.getenv(token_key)), timeout=10
             )
@@ -176,7 +178,7 @@ class GithubCalls:
             sys.exit(1)
 
         try:
-            time.sleep(2)
+            time.sleep(self._throttle_time)
             response = requests.get(
                 self._base_url,
                 auth=("token", os.getenv(token_key)),
@@ -210,7 +212,7 @@ class GithubCalls:
             sys.exit(1)
 
         try:
-            time.sleep(3)
+            time.sleep(self._throttle_time)
             response = requests.get(
                 full_commit_url, auth=("token", os.getenv(token_var)), timeout=25
             )
@@ -244,7 +246,7 @@ class GithubCalls:
             sys.exit(1)
 
         try:
-            time.sleep(3)
+            time.sleep(self._throttle_time)
             response = requests.get(
                 self._commits_api_url,
                 auth=("token", os.getenv(token_var)),

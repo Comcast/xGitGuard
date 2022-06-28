@@ -841,6 +841,7 @@ if __name__ == "__main__":
         configs.xgg_configs["github"]["public_api_url"],
         "public",
         configs.xgg_configs["github"]["public_commits_url"],
+        configs.xgg_configs["github"]["throttle_time"],
     )
 
     valid_config, token_var = check_github_token_env("public")

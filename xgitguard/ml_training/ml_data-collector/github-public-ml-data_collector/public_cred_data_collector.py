@@ -54,9 +54,9 @@ MODULE_DIR = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(MODULE_DIR)))
 sys.path.insert(0, parent_dir)
 
+from common.github_calls import GithubCalls
 from common.configs_read import ConfigsData
 from common.data_format import credential_extractor, remove_url_from_creds
-from common.github_calls import public_url_content_get, run_github_search
 from common.logger import create_logger
 from common.ml_process import entropy_calc
 from utilities.common_utilities import check_github_token_env
@@ -226,7 +226,7 @@ def process_search_urls(url_list, search_query):
     extractor = URLExtract()
     try:
         for url in url_list:
-            code_content_response = public_url_content_get(url)
+            code_content_response = githubCalls.public_url_content_get()
             if code_content_response:
                 code_content = code_content_response.text
             else:
@@ -501,14 +501,6 @@ def run_data_collector(primary_keyword="", secondary_keywords=[], extensions=[])
         run_data_collector(extension = ["py","txt"])
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
-    # Read and Setup Global Configuration Data to reference in all process
-    try:
-        global configs
-        if configs:
-            pass
-    except:
-        # Setting Global configuration Data
-        configs = ConfigsData()
 
     if secondary_keywords:
         if isinstance(secondary_keywords, list):
@@ -566,11 +558,9 @@ def run_data_collector(primary_keyword="", secondary_keywords=[], extensions=[])
                 # Search GitHub and return search response confidence_score
                 total_processed_search += 1
                 time.sleep(2)
-                search_response_lines = run_github_search(
-                    configs.xgg_configs["github"]["public_api_url"],
+                search_response_lines = githubCalls.run_github_search(
                     search_query,
                     extension,
-                    "public",
                 )
                 # If search has detections, process the result urls else continue next search
                 if search_response_lines:
@@ -617,9 +607,6 @@ def run_data_collector_from_file(secondary_keywords=[], extensions=[]):
     returns: None
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
-    # Setting Global configuration Data
-    global configs
-    configs = ConfigsData()
 
     # Get the Primary Keywords from Primary Keywords file
     configs.read_primary_keywords(file_name="primary_keywords.csv")
@@ -687,9 +674,6 @@ def run_data_collector_from_list(
 
         total_key_runs, success_key_runs = 0, 0
 
-        # Setting Global configuration Data
-        global configs
-        configs = ConfigsData()
         for primary_keyword in primary_keywords:
             if primary_keyword is None:
                 continue
@@ -851,6 +835,13 @@ if __name__ == "__main__":
     setup_logger(log_level, console_logging)
 
     logger.info("xGitGuard Public Credentials Data Collection Process Started")
+
+    configs = ConfigsData()
+    githubCalls = GithubCalls(
+        configs.xgg_configs["github"]["public_api_url"],
+        "public",
+        configs.xgg_configs["github"]["public_commits_url"],
+    )
 
     valid_config, token_var = check_github_token_env("public")
     if not valid_config:

@@ -37,10 +37,10 @@ xGitGuard Enterprise GitHub Credential Detection Process
 
     # Run with Secondary Keywords and Extensions from config files:
     python enterprise_cred_detections.py
-    
+
     # Run with Secondary Keywords from config file and given list of Extensions:
     python enterprise_cred_detections.py -e "py,txt"
-    
+
     # Run for given Secondary Keyword and Extension without ML prediction:
     python enterprise_cred_detections.py -s "password" -e "py"
 
@@ -71,11 +71,7 @@ from common.data_format import (
     format_commit_details,
     remove_url_from_creds,
 )
-from common.github_calls import (
-    enterprise_url_content_get,
-    get_github_enterprise_commits,
-    run_github_search,
-)
+from common.github_calls import GithubCalls
 from common.logger import create_logger
 from common.ml_process import entropy_calc, ml_prediction_process
 from ml_training.model import xgg_train_model
@@ -160,9 +156,7 @@ def format_detection(skeyword, org_url, url, code_content, secrets, skeyword_cou
             "enterprise_commits_url"
         ].format(user_name=user_name, repo_name=repo_name, file_path=file_path)
         header = configs.xgg_configs["github"]["enterprise_header"]
-        api_response_commit_data = get_github_enterprise_commits(
-            commits_api_url, header
-        )
+        api_response_commit_data = githubCalls.get_github_enterprise_commits( header)
         commit_details = format_commit_details(api_response_commit_data)
     except Exception as e:
         logger.warning(f"Github commit content formation error: {e}")
@@ -270,7 +264,7 @@ def process_search_urls(org_urls_list, url_list, search_query):
     try:
         for url in url_list:
             header = configs.xgg_configs["github"]["enterprise_header"]
-            code_content_response = enterprise_url_content_get(url, header)
+            code_content_response = githubCalls.enterprise_url_content_get(header)
             if code_content_response:
                 code_content = code_content_response.text
             else:
@@ -578,14 +572,6 @@ def run_detection(secondary_keywords=[], extensions=[], ml_prediction=False):
         run_detection(extension = ["py","txt"])
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
-    # Read and Setup Global Configuration Data to reference in all process
-    try:
-        global configs
-        if configs:
-            pass
-    except:
-        # Setting Global configuration Data
-        configs = ConfigsData()
 
     if secondary_keywords:
         if isinstance(secondary_keywords, list):
@@ -649,11 +635,9 @@ def run_detection(secondary_keywords=[], extensions=[], ml_prediction=False):
             try:
                 # Search GitHub and return search response confidence_score
                 total_processed_search += 1
-                search_response_lines = run_github_search(
-                    configs.xgg_configs["github"]["enterprise_api_url"],
+                search_response_lines = githubCalls.run_github_search(
                     search_query,
                     extension,
-                    "enterprise",
                 )
                 # If search has detections, process the result urls else continue next search
                 if search_response_lines:
@@ -843,6 +827,13 @@ if __name__ == "__main__":
 
     # Setting up Logger
     setup_logger(log_level, console_logging)
+
+    configs = ConfigsData()
+    githubCalls = GithubCalls(
+        configs.xgg_configs["github"]["enterprise_api_url"],
+        "enterprise",
+        configs.xgg_configs["github"]["public_commits_url"],
+    )
 
     logger.info("xGitGuard Credentials Detection Process Started")
     if ml_prediction:

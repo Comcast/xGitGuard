@@ -37,7 +37,7 @@ xGitGuard Public GitHub Keys and Token Detection process
 
     # Run with Primary Keywords, Secondary Keywords and Extensions from config files:
     python public_key_detections.py
-    
+
     # Run with Primary Keywords, Secondary Keywords and Extensions from config files with ML:
     python public_key_detections.py -m Yes
 
@@ -72,11 +72,7 @@ from common.data_format import (
     keys_extractor,
     remove_url_from_keys,
 )
-from common.github_calls import (
-    get_github_public_commits,
-    public_url_content_get,
-    run_github_search,
-)
+from common.github_calls import GithubCalls
 from common.logger import create_logger
 from common.ml_process import entropy_calc, ml_prediction_process
 from ml_training.model import xgg_train_model
@@ -160,10 +156,9 @@ def format_detection(pkeyword, skeyword, url, code_content, secrets, keyword_cou
 
     try:
         file_path = "/".join(raw_url_splits[1].split("/")[2:])
-        commits_api_url = configs.xgg_configs["github"]["public_commits_url"].format(
-            user_name=user_name, repo_name=repo_name, file_path=file_path
+        api_response_commit_data = githubCalls.get_github_public_commits(
+            user_name, repo_name, file_path
         )
-        api_response_commit_data = get_github_public_commits(commits_api_url)
         commit_details = format_commit_details(api_response_commit_data)
     except Exception as e:
         logger.warning(f"Github commit content formation error: {e}")
@@ -253,7 +248,7 @@ def process_search_urls(url_list, search_query):
     extractor = URLExtract()
     try:
         for url in url_list:
-            code_content_response = public_url_content_get(url)
+            code_content_response = githubCalls.public_url_content_get(url)
             if code_content_response:
                 code_content = code_content_response.text
             else:
@@ -279,7 +274,6 @@ def process_search_urls(url_list, search_query):
                     f"Skiping processing URL extract from code content as url lines is beyond 2: {len(lines)}"
                 )
                 continue
-
             code_contents = remove_url_from_keys(code_content)
             secrets_data = keys_extractor(code_contents)
 
@@ -559,14 +553,6 @@ def run_detection(
         run_detection(extension = ["py","txt"])
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
-    # Read and Setup Global Configuration Data to reference in all process
-    try:
-        global configs
-        if configs:
-            pass
-    except:
-        # Setting Global configuration Data
-        configs = ConfigsData()
 
     if secondary_keywords:
         if isinstance(secondary_keywords, list):
@@ -645,11 +631,9 @@ def run_detection(
             try:
                 # Search GitHub and return search response confidence_score
                 total_processed_search += 1
-                search_response_lines = run_github_search(
-                    configs.xgg_configs["github"]["public_api_url"],
+                search_response_lines = githubCalls.run_github_search(
                     search_query,
                     extension,
-                    "public",
                 )
                 # If search has detections, process the result urls else continue next search
                 if search_response_lines:
@@ -699,9 +683,6 @@ def run_detections_from_file(secondary_keywords=[], extensions=[], ml_prediction
     returns: None
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
-    # Setting Global configuration Data
-    global configs
-    configs = ConfigsData()
 
     # Get the Primary Keywords from Primary Keywords file
     configs.read_primary_keywords(file_name="primary_keywords.csv")
@@ -776,9 +757,6 @@ def run_detections_from_list(
 
         total_key_runs, success_key_runs = 0, 0
 
-        # Setting Global configuration Data
-        global configs
-        configs = ConfigsData()
         for primary_keyword in primary_keywords:
             if primary_keyword is None:
                 continue
@@ -983,7 +961,16 @@ if __name__ == "__main__":
     # Setting up Logger
     setup_logger(log_level, console_logging)
 
-    logger.info("xGitGuard Keys and Token Detection Process Started")
+    # Read and Setup Global Configuration Data to reference in all process
+    configs = ConfigsData()
+    githubCalls = GithubCalls(
+        configs.xgg_configs["github"]["public_api_url"],
+        "public",
+        configs.xgg_configs["github"]["public_commits_url"],
+        configs.xgg_configs["github"]["throttle_time"],
+    )
+
+    logger.info("xGitGuard Credentials Detection Process Started")
     if ml_prediction:
         logger.info("Running the xGitGuard detection with ML Prediction filter")
     else:

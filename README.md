@@ -1,6 +1,6 @@
 <h1 align="center"> xGitGuard </h1>
 
-<p align="center">AI-Based Secrets Detection<br> 
+<p align="center">AI-Based Secrets Detection<br>
 <i><b>Detect Secrets (API Tokens, Usernames, Passwords, etc.) Exposed on GitHub Repositories</b></i><br>
 Designed and Developed by Comcast Cybersecurity Research and Development Team</p>
 
@@ -377,7 +377,7 @@ The user needs to follow the below process to collect data and train the model t
 
 - Follow [ML Model Training](#ml-model-training)
 
-> **NOTE** :  
+> **NOTE** :
 > To use ML Feature, ML training is mandatory. It includes data collection,feature engineering & model persisting.
 
 ##### Command to Run Public Keys & Tokens Secret Scanner with ML
@@ -661,7 +661,7 @@ Traverse into the "ml_training" folder
 - Users can add additional extensions to extensions.csv to search types of files other than the default list.
 - Users can enhance secondary_creds.csv/secondary_keys.csv by adding new patterns to do searches other than the default list.
 - Users need to add primary keywords for public search in primary_keywords.csv after removing the sample content.
-- In case of GitHub API calls resulting in 403 due to API rate-limit, increase the sleep time before each API call in file "xgitguard/common/github_calls.py".
+- In case of GitHub API calls resulting in 403 due to API rate-limit, increase the throttle timeout (github.throttle_time: 10) in the config ("config/xgg_configs.yaml)".
 
 ## License
 

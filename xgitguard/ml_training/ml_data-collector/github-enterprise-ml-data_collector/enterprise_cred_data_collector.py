@@ -218,7 +218,7 @@ def process_search_urls(org_urls_list, url_list, search_query):
     try:
         for url in url_list:
             header = configs.xgg_configs["github"]["enterprise_header"]
-            code_content_response = githubCalls.enterprise_url_content_get(header)
+            code_content_response = githubCalls.enterprise_url_content_get(url, header)
             if code_content_response:
                 code_content = code_content_response.text
             else:

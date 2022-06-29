@@ -124,7 +124,7 @@ class GithubCalls:
         return {}
 
 
-    def public_url_content_get(self):
+    def public_url_content_get(self, file_url):
         """
         For the given GitHub url, call the api
         Get and return the response
@@ -145,7 +145,7 @@ class GithubCalls:
         try:
             time.sleep(self._throttle_time)
             response = requests.get(
-                self._base_url, auth=("token", os.getenv(token_key)), timeout=10
+                file_url, auth=("token", os.getenv(token_key)), timeout=10
             )
             return response
         except Exception as e:
@@ -154,7 +154,7 @@ class GithubCalls:
         return {}
 
 
-    def enterprise_url_content_get(self, header):
+    def enterprise_url_content_get(self, file_url, header):
         """
         For the given GitHub url, call the api
         Get and return the response
@@ -180,7 +180,7 @@ class GithubCalls:
         try:
             time.sleep(self._throttle_time)
             response = requests.get(
-                self._base_url,
+                file_url,
                 auth=("token", os.getenv(token_key)),
                 headers=header,
                 timeout=10,
@@ -222,7 +222,7 @@ class GithubCalls:
         return {}
 
 
-    def get_github_enterprise_commits(self, header):
+    def get_github_enterprise_commits(self, user_name, repo_name, file_path, header):
         """
         For the given GitHub details, call the api and get commit details
         Get and return the response
@@ -247,8 +247,11 @@ class GithubCalls:
 
         try:
             time.sleep(self._throttle_time)
+            full_commit_url = self._commits_api_url.format(
+                user_name=user_name, repo_name=repo_name, file_path=file_path
+            )
             response = requests.get(
-                self._commits_api_url,
+                full_commit_url,
                 auth=("token", os.getenv(token_var)),
                 headers=header,
                 timeout=25,

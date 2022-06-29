@@ -266,7 +266,7 @@ def process_search_urls(url_list, search_query):
     extractor = URLExtract()
     try:
         for url in url_list:
-            code_content_response = githubCalls.public_url_content_get()
+            code_content_response = githubCalls.public_url_content_get(url)
             if code_content_response:
                 code_content = code_content_response.text
             else:

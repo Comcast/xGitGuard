@@ -152,11 +152,13 @@ def format_detection(skeyword, org_url, url, code_content, secrets, skeyword_cou
 
     try:
         file_path = url.split("/contents/")[1]
-        commits_api_url = configs.xgg_configs["github"][
-            "enterprise_commits_url"
-        ].format(user_name=user_name, repo_name=repo_name, file_path=file_path)
         header = configs.xgg_configs["github"]["enterprise_header"]
-        api_response_commit_data = githubCalls.get_github_enterprise_commits( header)
+        api_response_commit_data = githubCalls.get_github_enterprise_commits(
+            user_name,
+            repo_name,
+            file_path,
+            header,
+        )
         commit_details = format_commit_details(api_response_commit_data)
     except Exception as e:
         logger.warning(f"Github commit content formation error: {e}")
@@ -264,7 +266,7 @@ def process_search_urls(org_urls_list, url_list, search_query):
     try:
         for url in url_list:
             header = configs.xgg_configs["github"]["enterprise_header"]
-            code_content_response = githubCalls.enterprise_url_content_get(header)
+            code_content_response = githubCalls.enterprise_url_content_get(url, header)
             if code_content_response:
                 code_content = code_content_response.text
             else:

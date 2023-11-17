@@ -117,7 +117,7 @@ def calculate_confidence(secondary_keyword, extension, secret):
     return [sum([secondary_keyword_value, extension_value]), entro, d_match[0]]
 
 
-def format_detection(skeyword, code_contents, secrets, skeyword_count, extension):
+def format_detection(file, skeyword, code_contents, secrets, skeyword_count, extension):
     """
     Format the secret data from the given code content and other data
         Format the secrets data in the required format
@@ -177,6 +177,7 @@ def format_detection(skeyword, code_contents, secrets, skeyword_count, extension
                 ):
                     if len(secret_line) < 300:
                         code_line = secret_line
+                        valid_secret_row.append(file)
                         valid_secret_row.append(secret)
                         valid_secret = True
                         break
@@ -223,34 +224,38 @@ def process_file_diffs(code_contents, search_query, extension):
     skeyword = search_query.split('"')[1].strip()
     secrets_data_list = []
 
-    for line in code_contents.split("\n")[6:]:
-        parsed_line = remove_url_from_creds(line, skeyword)
-        if(parsed_line):
-            try:
+    file = ""
+    for line in code_contents.split("\n"):
+        if(line):
+            if(line.strip().startswith("+++")):
+                file = line[6:]
+            parsed_line = remove_url_from_creds(line, skeyword)
+            if(parsed_line):
                 try:
-                    # for Reading Data only one time
-                    if configs.stop_words:
-                        pass
-                except:
-                    configs.read_stop_words(file_name="stop_words.csv")
+                    try:
+                        # for Reading Data only one time
+                        if configs.stop_words:
+                            pass
+                    except:
+                        configs.read_stop_words(file_name="stop_words.csv")
 
-                secrets_data = credential_extractor(parsed_line, configs.stop_words)
+                    secrets_data = credential_extractor(parsed_line, configs.stop_words)
 
-                skeyword_count = " ".join(parsed_line).lower().count(skeyword.lower())
-                if len(secrets_data) >= 1 and len(secrets_data) <= 20:
-                    clean_line = "".join(line).lower()[1:].strip()
-                    secret_data_list = format_detection(
-                        skeyword, "".join(clean_line).lower(), secrets_data, skeyword_count, extension
-                    )
-                    if secret_data_list:
-                        for secret_data in secret_data_list:
-                            secrets_data_list.append(secret_data)
-                else:
-                    logger.debug(
-                        f"Skipping secrets_data as length is not between 1 to 20. Length: {len(secrets_data)}"
-                    )
-            except Exception as e:
-                logger.error(f"Total Process Search (Exception Error): {e}")
+                    skeyword_count = " ".join(parsed_line).lower().count(skeyword.lower())
+                    if len(secrets_data) >= 1 and len(secrets_data) <= 20:
+                        clean_line = "".join(line).lower()[1:].strip()
+                        secret_data_list = format_detection(file,
+                            skeyword, "".join(clean_line).lower(), secrets_data, skeyword_count, extension
+                        )
+                        if secret_data_list:
+                            for secret_data in secret_data_list:
+                                secrets_data_list.append(secret_data)
+                    else:
+                        logger.debug(
+                            f"Skipping secrets_data as length is not between 1 to 20. Length: {len(secrets_data)}"
+                        )
+                except Exception as e:
+                    logger.error(f"Total Process Search (Exception Error): {e}")
     return secrets_data_list
 
 

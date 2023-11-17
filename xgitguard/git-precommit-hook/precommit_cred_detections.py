@@ -17,8 +17,8 @@ SPDX-License-Identifier: Apache-2.0
 """
 """
 xGitGuard Enterprise GitHub Credential Detection Process
-    xGitGuard detects the secret keys and tokens present in the enterprise Github repository.
-    When Primary Keyword is given, run GitHub search with Primary Keyword
+    xGitGuard detects the secret keys and tokens present in a locally stage git changes before ocmmitting.
+    When Primary Keyword is given, use the Primary Keyword
     Else, run search with Secondary Keywords and Extension combination
     Steps:
         - Get Secondary Keywords and Extension file data from config path
@@ -32,16 +32,16 @@ xGitGuard Enterprise GitHub Credential Detection Process
     By default all configuration keys will be taken from config files.
 
     # Run with Secondary Keywords and Extensions from config files:
-    python enterprise_cred_detections.py
+    python precommit_cred_detections.py
 
     # Run with Secondary Keywords from config file and given list of Extensions:
-    python enterprise_cred_detections.py -e "py,txt"
+    python precommit_cred_detections.py -e "py,txt"
 
     # Run for given Secondary Keyword and Extension without ML prediction:
-    python enterprise_cred_detections.py -s "password" -e "py"
+    python precommit_cred_detections.py -s "password" -e "py"
 
     # Run for given Secondary Keyword and Extension with ML prediction and debug console logging:
-    python enterprise_cred_detections.py -s "password" -e "py" -m Yes -l 10 -c Yes
+    python precommit_cred_detections.py -s "password" -e "py" -m Yes -l 10 -c Yes
 """
 
 import argparse
@@ -65,7 +65,8 @@ sys.path.insert(0, parent_dir)
 from common.configs_read import ConfigsData
 from common.data_format import (
     credential_extractor,
-    format_commit_details
+    format_commit_details,
+    remove_url_from_creds
 )
 from common.logger import create_logger
 from common.ml_process import entropy_calc, ml_prediction_process
@@ -91,7 +92,6 @@ def calculate_confidence(secondary_keyword, extension, secret):
             pass
     except:
         configs.read_confidence_values(file_name="confidence_values.csv")
-
     try:
         if not configs.dictionary_words.empty:
             pass
@@ -105,7 +105,6 @@ def calculate_confidence(secondary_keyword, extension, secret):
     secondary_keyword_value = int(
         configs.confidence_values.loc[secondary_keyword]["value"]
     )
-
     try:
         extension_value = int(configs.confidence_values.loc[extension]["value"])
     except:
@@ -118,7 +117,7 @@ def calculate_confidence(secondary_keyword, extension, secret):
     return [sum([secondary_keyword_value, extension_value]), entro, d_match[0]]
 
 
-def format_detection(skeyword, code_content, secrets, skeyword_count):
+def format_detection(skeyword, code_contents, secrets, skeyword_count, extension):
     """
     Format the secret data from the given code content and other data
         Format the secrets data in the required format
@@ -128,7 +127,7 @@ def format_detection(skeyword, code_content, secrets, skeyword_count):
         Return the final formatted detections
 
     params: skeyword - string - Secondary Keyword
-    params: code_content - list - User code content
+    params: code_contents - list - User code content
     params: secrets - list - Detected secrets list
     params: skeyword_count - int - secondary keyword count
     returns: secrets_data_list - list - List of formatted detections
@@ -143,10 +142,9 @@ def format_detection(skeyword, code_content, secrets, skeyword_count):
     for secret in secrets:
         # Calculate confidence values for detected secrets
         confidence_score = calculate_confidence(skeyword, extension, secret)
-
         if confidence_score[1] > 1.5:
             valid_secret_row = [value for value in secret_data]
-            secret_lines = re.findall(".*" + secret + ".*$", code_content, re.MULTILINE)
+            secret_lines = re.findall(".*" + secret + ".*$", code_contents, re.MULTILINE)
             # code_line = secret
             for secret_line in secret_lines:
                 if (
@@ -212,7 +210,7 @@ def format_detection(skeyword, code_content, secrets, skeyword_count):
     return secrets_data_list
 
 
-def process_file_diffs(code_content, search_query):
+def process_file_diffs(code_contents, search_query, extension):
     """
         Extract secret values using regex
         Format the secrets detected
@@ -224,34 +222,37 @@ def process_file_diffs(code_content, search_query):
     # Processes search findings
     skeyword = search_query.split('"')[1].strip()
     secrets_data_list = []
-    try:
+
+    for line in code_contents.split("\n")[6:]:
+        clean_line = remove_url_from_creds(line, skeyword)
         try:
-            # for Reading Data only one time
-            if configs.stop_words:
-                pass
-        except:
-            configs.read_stop_words(file_name="stop_words.csv")
+            try:
+                # for Reading Data only one time
+                if configs.stop_words:
+                    pass
+            except:
+                configs.read_stop_words(file_name="stop_words.csv")
 
-        secrets_data = credential_extractor(code_contents, configs.stop_words)
+            secrets_data = credential_extractor(clean_line, configs.stop_words)
 
-        skeyword_count = code_content.lower().count(skeyword.lower())
-        if len(secrets_data) >= 1 and len(secrets_data) <= 20:
-            secret_data_list = format_detection(
-                skeyword, code_content, secrets_data, skeyword_count
-            )
-            if secret_data_list:
-                for secret_data in secret_data_list:
-                    secrets_data_list.append(secret_data)
-        else:
-            logger.debug(
-                f"Skipping secrets_data as length is not between 1 to 20. Length: {len(secrets_data)}"
-            )
-    except Exception as e:
-        logger.error(f"Total Process Search (Exception Error): {e}")
+            skeyword_count = " ".join(clean_line).lower().count(skeyword.lower())
+            if len(secrets_data) >= 1 and len(secrets_data) <= 20:
+                secret_data_list = format_detection(
+                    skeyword, "".join(line).lower(), secrets_data, skeyword_count, extension
+                )
+                if secret_data_list:
+                    for secret_data in secret_data_list:
+                        secrets_data_list.append(secret_data)
+            else:
+                logger.debug(
+                    f"Skipping secrets_data as length is not between 1 to 20. Length: {len(secrets_data)}"
+                )
+        except Exception as e:
+            logger.error(f"Total Process Search (Exception Error): {e}")
     return secrets_data_list
 
 
-def process_search_results(git_changes, search_query, ml_prediction):
+def process_search_results(git_changes, search_query, ml_prediction, extension):
     """
         For the user code content
         Format and clean the code content
@@ -269,12 +270,12 @@ def process_search_results(git_changes, search_query, ml_prediction):
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
     detection_writes_per_query = 0
-    new_results_per_query = 0
     detections_per_query = 0
     global file_prefix
-    secrets_detected = process_file_diffs(git_changes, search_query)
+    secrets_detected = process_file_diffs(git_changes, search_query, extension)
     detections = len(secrets_detected)
     if secrets_detected:
+        detections_per_query = detections
         try:
             logger.debug(
                 f"Current secrets_detected count: {len(secrets_detected)}"
@@ -283,7 +284,7 @@ def process_search_results(git_changes, search_query, ml_prediction):
             secrets_detected_df = pd.DataFrame(
                 secrets_detected,
                 columns=configs.xgg_configs["secrets"][
-                    "enterprise_data_columns"
+                    "precommit_data_collector_columns"
                 ],
             )
         except Exception as e:
@@ -292,7 +293,7 @@ def process_search_results(git_changes, search_query, ml_prediction):
             )
             secrets_detected_df = pd.DataFrame(
                 columns=configs.xgg_configs["secrets"][
-                    "enterprise_data_columns"
+                    "precommit_data_collector_columns"
                 ],
             )
         if not secrets_detected_df.empty:
@@ -321,7 +322,7 @@ def process_search_results(git_changes, search_query, ml_prediction):
                     try:
                         secrets_detected_file = os.path.join(
                             configs.output_dir,
-                            "xgg_ml_enterprise_creds_detected.csv",
+                            "xgg_ml_precommit_creds_detected.csv",
                         )
                         write_to_csv_file(
                             secrets_ml_predicted, secrets_detected_file
@@ -341,7 +342,7 @@ def process_search_results(git_changes, search_query, ml_prediction):
                     try:
                         secrets_detected_file = os.path.join(
                             configs.output_dir,
-                            "xgg_enterprise_creds_detected.csv",
+                            "xgg_precommit_creds_detected.csv",
                         )
                         write_to_csv_file(
                             secrets_detected_df, secrets_detected_file
@@ -354,7 +355,7 @@ def process_search_results(git_changes, search_query, ml_prediction):
             )
     else:
         logger.info("No Secrets in current search results")
-    return detection_writes_per_query, new_results_per_query, detections_per_query
+    return detection_writes_per_query, detections_per_query
 
 
 def format_search_query_list(secondary_keywords):
@@ -471,7 +472,6 @@ def run_detection(secondary_keywords=[], extensions=[], ml_prediction=False):
     for extension in configs.extensions:
         for search_query in search_query_list:
             detection_writes_per_query = 0
-            new_results_per_query = 0
             detections_per_query = 0
             logger.info(
                 f"*******  Processing Search Query: '{search_query} extension:{extension}'  *******"
@@ -484,10 +484,9 @@ def run_detection(secondary_keywords=[], extensions=[], ml_prediction=False):
                 if git_changes:
                     (
                         detection_writes_per_query,
-                        new_results_per_query,
                         detections_per_query,
                     ) = process_search_results(
-                        git_changes, search_query, ml_prediction
+                        git_changes, search_query, ml_prediction, extension
                     )
                     logger.info(
                         f"Detection writes in current search query: {detection_writes_per_query}"
@@ -504,14 +503,12 @@ def run_detection(secondary_keywords=[], extensions=[], ml_prediction=False):
         logger.info(f"Current Total Processed Search: {total_processed_search}")
         logger.info(f"Current Total Detections Write: {total_detection_writes}")
 
-        if new_results_per_query >= 0:
-            logger.info(
-                f"Total: {total_search_pairs} "
-                + f"Processed: {total_processed_search} "
-                + f"Detected: {detections_per_query} "
-                + f"Total Writes: {detection_writes_per_query} "
-                + f"Count URL: {new_results_per_query}"
-            )
+        logger.info(
+            f"Total: {total_search_pairs} "
+            + f"Processed: {total_processed_search} "
+            + f"Detected: {detections_per_query} "
+            + f"Total Writes: {detection_writes_per_query} "
+        )
 
     logger.info(f"Total Processed Search: {total_processed_search}")
     logger.info(f"Total Detections Write: {total_detection_writes}")

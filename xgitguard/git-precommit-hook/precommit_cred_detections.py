@@ -224,31 +224,33 @@ def process_file_diffs(code_contents, search_query, extension):
     secrets_data_list = []
 
     for line in code_contents.split("\n")[6:]:
-        clean_line = remove_url_from_creds(line, skeyword)
-        try:
+        parsed_line = remove_url_from_creds(line, skeyword)
+        if(parsed_line):
             try:
-                # for Reading Data only one time
-                if configs.stop_words:
-                    pass
-            except:
-                configs.read_stop_words(file_name="stop_words.csv")
+                try:
+                    # for Reading Data only one time
+                    if configs.stop_words:
+                        pass
+                except:
+                    configs.read_stop_words(file_name="stop_words.csv")
 
-            secrets_data = credential_extractor(clean_line, configs.stop_words)
+                secrets_data = credential_extractor(parsed_line, configs.stop_words)
 
-            skeyword_count = " ".join(clean_line).lower().count(skeyword.lower())
-            if len(secrets_data) >= 1 and len(secrets_data) <= 20:
-                secret_data_list = format_detection(
-                    skeyword, "".join(line).lower(), secrets_data, skeyword_count, extension
-                )
-                if secret_data_list:
-                    for secret_data in secret_data_list:
-                        secrets_data_list.append(secret_data)
-            else:
-                logger.debug(
-                    f"Skipping secrets_data as length is not between 1 to 20. Length: {len(secrets_data)}"
-                )
-        except Exception as e:
-            logger.error(f"Total Process Search (Exception Error): {e}")
+                skeyword_count = " ".join(parsed_line).lower().count(skeyword.lower())
+                if len(secrets_data) >= 1 and len(secrets_data) <= 20:
+                    clean_line = "".join(line).lower()[1:].strip()
+                    secret_data_list = format_detection(
+                        skeyword, "".join(clean_line).lower(), secrets_data, skeyword_count, extension
+                    )
+                    if secret_data_list:
+                        for secret_data in secret_data_list:
+                            secrets_data_list.append(secret_data)
+                else:
+                    logger.debug(
+                        f"Skipping secrets_data as length is not between 1 to 20. Length: {len(secrets_data)}"
+                    )
+            except Exception as e:
+                logger.error(f"Total Process Search (Exception Error): {e}")
     return secrets_data_list
 
 

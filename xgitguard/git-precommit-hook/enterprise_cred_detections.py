@@ -24,23 +24,19 @@ xGitGuard Enterprise GitHub Credential Detection Process
         - Get Secondary Keywords and Extension file data from config path
         - Prepare the search query list by combining Primary Keyword with each Secondary Keyword
         - Loop over each Extension for each search query
-            -- Search GitHub and get response data
-            -- Process the response urls
-            -- If url is already processed in previous runs, skip it
-            -- Get the code content for the html urls
+            -- Take current commmit data for the difference between staged and last commit
             -- Clean the code content and extract Secrets
             -- Detect the Secrets using RegEx and format Secret records
             -- Predict the Secret data using ML model
-            -- Write the cleaned and detected url data
     Example Commands:
     By default all configuration keys will be taken from config files.
 
     # Run with Secondary Keywords and Extensions from config files:
     python enterprise_cred_detections.py
-    
+
     # Run with Secondary Keywords from config file and given list of Extensions:
     python enterprise_cred_detections.py -e "py,txt"
-    
+
     # Run for given Secondary Keyword and Extension without ML prediction:
     python enterprise_cred_detections.py -s "password" -e "py"
 
@@ -59,9 +55,8 @@ import subprocess
 
 
 import pandas as pd
-from urlextract import URLExtract
 
-MODULE_DIR = os.path.dirname(os.path.realpath(__file__))
+MODULE_DIR = os.path.dirname(os.path.realpath('__file__'))
 
 parent_dir = os.path.dirname(MODULE_DIR)
 sys.path.insert(0, parent_dir)
@@ -70,8 +65,7 @@ sys.path.insert(0, parent_dir)
 from common.configs_read import ConfigsData
 from common.data_format import (
     credential_extractor,
-    format_commit_details,
-    remove_url_from_creds,
+    format_commit_details
 )
 from common.logger import create_logger
 from common.ml_process import entropy_calc, ml_prediction_process
@@ -124,7 +118,7 @@ def calculate_confidence(secondary_keyword, extension, secret):
     return [sum([secondary_keyword_value, extension_value]), entro, d_match[0]]
 
 
-def format_detection(skeyword, org_url, url, code_content, secrets, skeyword_count):
+def format_detection(skeyword, code_content, secrets, skeyword_count):
     """
     Format the secret data from the given code content and other data
         Format the secrets data in the required format
@@ -134,8 +128,6 @@ def format_detection(skeyword, org_url, url, code_content, secrets, skeyword_cou
         Return the final formatted detections
 
     params: skeyword - string - Secondary Keyword
-    params: org_url - string - github url
-    params: url - string - github url
     params: code_content - list - User code content
     params: secrets - list - Detected secrets list
     params: skeyword_count - int - secondary keyword count
@@ -147,31 +139,6 @@ def format_detection(skeyword, org_url, url, code_content, secrets, skeyword_cou
     secret_data = []
     global unmask_secret
 
-    extension = org_url.split(".")[-1]
-    user_name = org_url.split("/")[3]
-    repo_name = org_url.split("/")[4]
-
-    try:
-        file_path = url.split("/contents/")[1]
-        commits_api_url = configs.xgg_configs["github"][
-            "enterprise_commits_url"
-        ].format(user_name=user_name, repo_name=repo_name, file_path=file_path)
-        header = configs.xgg_configs["github"]["enterprise_header"]
-        api_response_commit_data = get_github_enterprise_commits(
-            commits_api_url, header
-        )
-        commit_details = format_commit_details(api_response_commit_data)
-    except Exception as e:
-        logger.warning(f"Github commit content formation error: {e}")
-        commit_details = {}
-
-    secret_data.insert(0, commit_details)
-    secret_data.insert(0, repo_name)
-    secret_data.insert(0, user_name)
-    secret_data.insert(0, org_url)
-    secret_data.insert(0, extension)
-    secret_data.insert(0, skeyword)
-    secret_data.insert(0, "xGG_Enterprise_Credential")
     logger.debug("<<<< 'Current Executing Function calculate_confidence loop' >>>>")
     for secret in secrets:
         # Calculate confidence values for detected secrets
@@ -245,17 +212,11 @@ def format_detection(skeyword, org_url, url, code_content, secrets, skeyword_cou
     return secrets_data_list
 
 
-def process_search_urls(org_urls_list, url_list, search_query):
+def process_file_diffs(code_content, search_query):
     """
-    Process the Search html url as below
-        Get code content from GitHub for the html url
-        Remove Url data from code content
         Extract secret values using regex
         Format the secrets detected
         Return the secrets detected
-
-    params: org_urls_list - list - list of html urls to get code content
-    params: url_list - list - list of html urls to get code content
     params: search_query - string
     returns: secrets_data_list - list - Detected secrets data
     """
@@ -263,261 +224,136 @@ def process_search_urls(org_urls_list, url_list, search_query):
     # Processes search findings
     skeyword = search_query.split('"')[1].strip()
     secrets_data_list = []
-    extractor = URLExtract()
     try:
-        for url in url_list:
-            header = configs.xgg_configs["github"]["enterprise_header"]
-            code_content_response = enterprise_url_content_get(url, header)
-            if code_content_response:
-                code_content = code_content_response.text
-            else:
-                logger.debug("No response for url content get call")
-                continue
+        try:
+            # for Reading Data only one time
+            if configs.stop_words:
+                pass
+        except:
+            configs.read_stop_words(file_name="stop_words.csv")
 
-            try:
-                url_file_extension = url.split(".")[-1]
-                url_counts = extractor.find_urls(code_content)
-                if len(url_counts) > 30 or url_file_extension == "md":
-                    logger.debug(
-                        f"Skip processing URL extract from code content as at url counts is beyond 30: {len(url_counts)}"
-                    )
-                    continue
-            except Exception as e:
-                logger.debug(
-                    f"Skip processing URL extract from code content at first 10000 URL limits"
-                )
-                continue
+        secrets_data = credential_extractor(code_contents, configs.stop_words)
 
-            lines = code_content.split("\n")
-            if len(lines) <= 2:
-                logger.debug(
-                    f"Skiping processing URL extract from code content as url lines is beyond 2: {len(lines)}"
-                )
-                continue
-
-            code_contents = remove_url_from_creds(code_content, skeyword)
-
-            try:
-                # for Reading Data only one time
-                if configs.stop_words:
-                    pass
-            except:
-                configs.read_stop_words(file_name="stop_words.csv")
-
-            secrets_data = credential_extractor(code_contents, configs.stop_words)
-
-            skeyword_count = code_content.lower().count(skeyword.lower())
-            if len(secrets_data) >= 1 and len(secrets_data) <= 20:
-                org_url = org_urls_list[url_list.index(url)]
-                secret_data_list = format_detection(
-                    skeyword, org_url, url, code_content, secrets_data, skeyword_count
-                )
-                if secret_data_list:
-                    for secret_data in secret_data_list:
-                        secrets_data_list.append(secret_data)
-            else:
-                logger.debug(
-                    f"Skipping secrets_data as length is not between 1 to 20. Length: {len(secrets_data)}"
-                )
+        skeyword_count = code_content.lower().count(skeyword.lower())
+        if len(secrets_data) >= 1 and len(secrets_data) <= 20:
+            secret_data_list = format_detection(
+                skeyword, code_content, secrets_data, skeyword_count
+            )
+            if secret_data_list:
+                for secret_data in secret_data_list:
+                    secrets_data_list.append(secret_data)
+        else:
+            logger.debug(
+                f"Skipping secrets_data as length is not between 1 to 20. Length: {len(secrets_data)}"
+            )
     except Exception as e:
         logger.error(f"Total Process Search (Exception Error): {e}")
     return secrets_data_list
 
 
-def check_existing_detections(org_url_list, url_list, search_query):
+def process_search_results(git_changes, search_query, ml_prediction):
     """
-    Check whether the current urs where processed in previous runs
-    for each url in url list
-        create hex hash value for the url
-        check the url hash in previous detected urls
-        if not present add them to further process
-        skip if its already present in detected urls
-
-    params: url_list - List - List of search result urls
-    params: search_query - String - Search query string
-
-    returns: new_urls_list - List - New url list
-    returns: new_hashed_urls - List - New Url Hash detected
-    """
-    logger.debug("<<<< 'Current Executing Function' >>>>")
-    new_org_url_list, new_urls_list, new_hashed_urls = [], [], []
-    global file_prefix
-    # Get the Already predicted hashed url list if present
-    try:
-        # for Reading training Data only one time
-        if configs.hashed_urls:
-            pass
-    except:
-        configs.read_hashed_url(
-            file_name=file_prefix + "enterprise_hashed_url_creds.csv"
-        )
-
-    if url_list:
-        for url in url_list:
-            url_to_hash = url + search_query
-            hashed_url = hashlib.md5(url_to_hash.encode()).hexdigest()
-            new_hashed_url = []
-            if not hashed_url in configs.hashed_urls:
-                new_org_url_list.append(org_url_list[url_list.index(url)])
-                new_urls_list.append(url)
-                new_hashed_url.append(hashed_url)
-                new_hashed_url.append(url)
-            if new_hashed_url:
-                new_hashed_urls.append(new_hashed_url)
-    return new_org_url_list, new_urls_list, new_hashed_urls
-
-
-def process_search_results(search_response_lines, search_query, ml_prediction):
-    """
-    For each search response items, process as below
-        Get the html urls from the search response
-        Check if the current url is already processed
-        if not processed, continue. else skip the url and proceed
-        Get the user code content for the html url
+        For the user code content
         Format and clean the code content
         Find the secrets
         Format the detections
         Run the ML prediction on the detection
         If detection is predicted, write the detections
-        Write the hashed urls to file
 
-    params: search_response_lines - list
+    params: git_changes - all lines of the current git changes
     params: search_query - string
     params: ml_prediction - boolean
 
     returns: detection_writes_per_query - int - Total detections written to file
-    returns: new_results_per_query - int - No of new urls per query
     returns: detections_per_query - int - No of detections per search
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
     detection_writes_per_query = 0
     new_results_per_query = 0
     detections_per_query = 0
-    new_hashed_urls = []
     global file_prefix
-
-    url_list, org_url_list = [], []
-
-    hashed_urls_file = os.path.join(
-        configs.output_dir, file_prefix + "enterprise_hashed_url_creds.csv"
-    )
-    for line in search_response_lines:
-        html_url = line["html_url"]
-        org_url_list.append(html_url)
-        html_url = (
-            configs.xgg_configs["github"]["enterprise_pre_url"]
-            + line["repository"]["full_name"]
-            + "/contents/"
-            + line["path"]
-        )
-        url_list.append(html_url)
-
-    if url_list:
-        # Check if current url is processed in previous runs
-        new_org_urls_list, new_urls_list, new_hashed_urls = check_existing_detections(
-            org_url_list, url_list, search_query
-        )
-        new_results_per_query = len(new_urls_list)
-        if new_hashed_urls:
-            secrets_detected = process_search_urls(
-                new_org_urls_list, new_urls_list, search_query
+    secrets_detected = process_file_diffs(git_changes, search_query)
+    detections = len(secrets_detected)
+    if secrets_detected:
+        try:
+            logger.debug(
+                f"Current secrets_detected count: {len(secrets_detected)}"
             )
-            detections_per_query += len(secrets_detected)
-            if secrets_detected:
+            # logger.debug(f"secrets_detected: {secrets_detected}")
+            secrets_detected_df = pd.DataFrame(
+                secrets_detected,
+                columns=configs.xgg_configs["secrets"][
+                    "enterprise_data_columns"
+                ],
+            )
+        except Exception as e:
+            logger.error(
+                f"secrets_detected Dataframe creation failed. Error: {e}"
+            )
+            secrets_detected_df = pd.DataFrame(
+                columns=configs.xgg_configs["secrets"][
+                    "enterprise_data_columns"
+                ],
+            )
+        if not secrets_detected_df.empty:
+            if ml_prediction == True:
+                # for Reading training Data only one time
                 try:
-                    logger.debug(
-                        f"Current secrets_detected count: {len(secrets_detected)}"
-                    )
-                    # logger.debug(f"secrets_detected: {secrets_detected}")
-                    secrets_detected_df = pd.DataFrame(
-                        secrets_detected,
-                        columns=configs.xgg_configs["secrets"][
-                            "enterprise_data_columns"
-                        ],
-                    )
-                except Exception as e:
-                    logger.error(
-                        f"secrets_detected Dataframe creation failed. Error: {e}"
-                    )
-                    secrets_detected_df = pd.DataFrame(
-                        columns=configs.xgg_configs["secrets"][
-                            "enterprise_data_columns"
-                        ],
-                    )
-                if not secrets_detected_df.empty:
-                    if ml_prediction == True:
-                        # for Reading training Data only one time
-                        try:
-                            if configs.training_data:
-                                pass
-                        except:
-                            configs.read_training_data(file_name="cred_train.csv")
+                    if configs.training_data:
+                        pass
+                except:
+                    configs.read_training_data(file_name="cred_train.csv")
 
-                        secrets_ml_predicted = ml_prediction_process(
-                            model_name="xgg_cred_rf_model_object.pickle",
-                            training_data=configs.training_data,
-                            detection_data=secrets_detected_df,
-                        )
-
-                        if not secrets_ml_predicted.empty:
-                            detection_writes_per_query += secrets_ml_predicted.shape[0]
-                            secrets_ml_predicted = secrets_ml_predicted.drop(
-                                "Secret", 1
-                            )
-                            logger.debug(
-                                f"Current secrets_ml_predicted count: {secrets_ml_predicted.shape[0]}"
-                            )
-                            try:
-                                secrets_detected_file = os.path.join(
-                                    configs.output_dir,
-                                    "xgg_ml_enterprise_creds_detected.csv",
-                                )
-                                write_to_csv_file(
-                                    secrets_ml_predicted, secrets_detected_file
-                                )
-                            except Exception as e:
-                                logger.error(f"Process Error: {e}")
-                    else:
-                        if not secrets_detected_df.empty:
-                            detection_writes_per_query += secrets_detected_df.shape[0]
-                            secrets_detected_df = secrets_detected_df.drop(
-                                "Secret", axis=1
-                            )
-
-                            logger.debug(
-                                f"Current secrets_detected_df count: {secrets_detected_df.shape[0]}"
-                            )
-                            try:
-                                secrets_detected_file = os.path.join(
-                                    configs.output_dir,
-                                    "xgg_enterprise_creds_detected.csv",
-                                )
-                                write_to_csv_file(
-                                    secrets_detected_df, secrets_detected_file
-                                )
-                            except Exception as e:
-                                logger.error(f"Process Error: {e}")
-                else:
-                    logger.debug(
-                        "secrets_detected_df is empty. So skipping collection/prediction."
-                    )
-            else:
-                logger.info("No Secrets in current search results")
-
-            try:
-                new_hashed_urls_df = pd.DataFrame(
-                    new_hashed_urls, columns=["hashed_url", "url"]
+                secrets_ml_predicted = ml_prediction_process(
+                    model_name="xgg_cred_rf_model_object.pickle",
+                    training_data=configs.training_data,
+                    detection_data=secrets_detected_df,
                 )
-                write_to_csv_file(new_hashed_urls_df, hashed_urls_file)
-            except Exception as e:
-                logger.error(f"File Write error: {e}")
-                sys.exit(1)
+
+                if not secrets_ml_predicted.empty:
+                    detection_writes_per_query += secrets_ml_predicted.shape[0]
+                    secrets_ml_predicted = secrets_ml_predicted.drop(
+                        "Secret", 1
+                    )
+                    logger.debug(
+                        f"Current secrets_ml_predicted count: {secrets_ml_predicted.shape[0]}"
+                    )
+                    try:
+                        secrets_detected_file = os.path.join(
+                            configs.output_dir,
+                            "xgg_ml_enterprise_creds_detected.csv",
+                        )
+                        write_to_csv_file(
+                            secrets_ml_predicted, secrets_detected_file
+                        )
+                    except Exception as e:
+                        logger.error(f"Process Error: {e}")
+            else:
+                if not secrets_detected_df.empty:
+                    detection_writes_per_query += secrets_detected_df.shape[0]
+                    secrets_detected_df = secrets_detected_df.drop(
+                        "Secret", axis=1
+                    )
+
+                    logger.debug(
+                        f"Current secrets_detected_df count: {secrets_detected_df.shape[0]}"
+                    )
+                    try:
+                        secrets_detected_file = os.path.join(
+                            configs.output_dir,
+                            "xgg_enterprise_creds_detected.csv",
+                        )
+                        write_to_csv_file(
+                            secrets_detected_df, secrets_detected_file
+                        )
+                    except Exception as e:
+                        logger.error(f"Process Error: {e}")
         else:
-            logger.info(
-                f"All {len(url_list)} urls in current search is already processed and hashed"
+            logger.debug(
+                "secrets_detected_df is empty. So skipping collection/prediction."
             )
     else:
-        logger.info(f"No valid html urls in the current search results to process.")
+        logger.info("No Secrets in current search results")
     return detection_writes_per_query, new_results_per_query, detections_per_query
 
 
@@ -544,10 +380,7 @@ def run_detection(secondary_keywords=[], extensions=[], ml_prediction=False):
         Get Secondary Keywords and Extension file data from config path
         Prepare the search query list by combining Primary Keyword with each Secondary Keyword
         Loop over each extension for each search query
-            Search GitHub and get response data
-            Process the response urls
-            If url is already processed in previous runs, skip the same
-            Get the code content for the html urls
+            Get the code content for the current git diff
             Clean the code content and extract secrets
             Detect the secrets using RegEx and format secret records
             Predict the secret data using ML model
@@ -646,20 +479,15 @@ def run_detection(secondary_keywords=[], extensions=[], ml_prediction=False):
             try:
                 # Search GitHub and return search response confidence_score
                 total_processed_search += 1
-                search_response_lines = run_github_search(
-                    configs.xgg_configs["github"]["enterprise_api_url"],
-                    search_query,
-                    extension,
-                    "enterprise",
-                )
-                # If search has detections, process the result urls else continue next search
-                if search_response_lines:
+                git_changes = subprocess.check_output(["git", "diff", "--staged"]).decode("utf-8")
+                # If search has detections, process the code changes
+                if git_changes:
                     (
                         detection_writes_per_query,
                         new_results_per_query,
                         detections_per_query,
                     ) = process_search_results(
-                        search_response_lines, search_query, ml_prediction
+                        git_changes, search_query, ml_prediction
                     )
                     logger.info(
                         f"Detection writes in current search query: {detection_writes_per_query}"
@@ -697,7 +525,7 @@ def setup_logger(log_level=10, console_logging=True):
     params: console_logging - Boolean - optional - Enable console logging - default True
     """
     log_dir = os.path.abspath(os.path.join(os.path.dirname(MODULE_DIR), ".", "logs"))
-    log_file_name = f"{os.path.basename(__file__).split('.')[0]}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+    log_file_name = f"{os.path.basename('__file__').split('.')[0]}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
     global logger
     # Creates a logger
     logger = create_logger(
@@ -826,7 +654,6 @@ def arg_parser():
         console_logging,
     )
 
-
 if __name__ == "__main__":
     # Argument Parsing
     (
@@ -838,8 +665,6 @@ if __name__ == "__main__":
         console_logging,
     ) = arg_parser()
 
-    changes = subprocess.check_output(["git diff"]).decode("utf-8")
-
     # Setting up Logger
     setup_logger(log_level, console_logging)
 
@@ -848,13 +673,6 @@ if __name__ == "__main__":
         logger.info("Running the xGitGuard detection with ML Prediction filter")
     else:
         logger.info("Running the xGitGuard detection without ML Prediction filter")
-
-    valid_config, token_var = check_github_token_env("enterprise")
-    if not valid_config:
-        logger.error(
-            f"GitHub API Token Environment variable '{token_var}' not set. API Search will fail/return no results. Please Setup and retry"
-        )
-        sys.exit(1)
 
     run_detection(secondary_keywords, extensions, ml_prediction)
 

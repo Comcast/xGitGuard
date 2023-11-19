@@ -59,7 +59,7 @@ import pandas as pd
 MODULE_DIR = os.path.dirname(os.path.realpath('__file__'))
 
 parent_dir = os.path.dirname(MODULE_DIR)
-sys.path.insert(0, parent_dir)
+sys.path.insert(0, '/Users/sparri919/Documents/GitHub/xGitGuard/xgitguard')
 
 
 from common.configs_read import ConfigsData
@@ -78,7 +78,7 @@ from utilities.common_utilities import check_github_token_env
 file_prefix = "xgg_"
 
 
-def calculate_confidence(secondary_keyword, extension, secret):
+def calculate_confidence(secondary_keyword, secret):
     """
     Calculates confidence scores for given Keywords
     params: secondary_keyword - string
@@ -117,7 +117,7 @@ def calculate_confidence(secondary_keyword, extension, secret):
     return [sum([secondary_keyword_value, extension_value]), entro, d_match[0]]
 
 
-def format_detection(file, skeyword, code_contents, secrets, skeyword_count, extension):
+def format_detection(file, skeyword, code_contents, secrets, skeyword_count):
     """
     Format the secret data from the given code content and other data
         Format the secrets data in the required format
@@ -141,7 +141,7 @@ def format_detection(file, skeyword, code_contents, secrets, skeyword_count, ext
     logger.debug("<<<< 'Current Executing Function calculate_confidence loop' >>>>")
     for secret in secrets:
         # Calculate confidence values for detected secrets
-        confidence_score = calculate_confidence(skeyword, extension, secret)
+        confidence_score = calculate_confidence(skeyword, secret)
         if confidence_score[1] > 1.5:
             valid_secret_row = [value for value in secret_data]
             secret_lines = re.findall(".*" + secret + ".*$", code_contents, re.MULTILINE)
@@ -188,8 +188,6 @@ def format_detection(file, skeyword, code_contents, secrets, skeyword_count, ext
                     # Mask the current secret
                     masked_secret = mask_data(code_line, secret)
                 valid_secret_row.append(masked_secret)
-
-                valid_secret_row.append(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
                 valid_secret_row.append(confidence_score[0])
                 count_score = math.log2(50) / (math.log2(skeyword_count + 1) + 1)
                 valid_secret_row.append(count_score)
@@ -200,10 +198,6 @@ def format_detection(file, skeyword, code_contents, secrets, skeyword_count, ext
                     confidence_score[0] + confidence_score[1] + count_score + d_match
                 )
                 now = datetime.now()
-                valid_secret_row.append(now.year)
-                valid_secret_row.append(now.month)
-                valid_secret_row.append(now.day)
-                valid_secret_row.append(now.hour)
                 secrets_data_list.append(valid_secret_row)
                 valid_secret = False
     logger.debug(f"Current formatted secrets_data_list count: {len(secrets_data_list)}")
@@ -211,7 +205,7 @@ def format_detection(file, skeyword, code_contents, secrets, skeyword_count, ext
     return secrets_data_list
 
 
-def process_file_diffs(code_contents, search_query, extension):
+def process_file_diffs(code_contents, search_query):
     """
         Extract secret values using regex
         Format the secrets detected
@@ -245,7 +239,7 @@ def process_file_diffs(code_contents, search_query, extension):
                     if len(secrets_data) >= 1 and len(secrets_data) <= 20:
                         clean_line = "".join(line).lower()[1:].strip()
                         secret_data_list = format_detection(file,
-                            skeyword, "".join(clean_line).lower(), secrets_data, skeyword_count, extension
+                            skeyword, "".join(clean_line).lower(), secrets_data, skeyword_count
                         )
                         if secret_data_list:
                             for secret_data in secret_data_list:
@@ -259,7 +253,7 @@ def process_file_diffs(code_contents, search_query, extension):
     return secrets_data_list
 
 
-def process_search_results(git_changes, search_query, ml_prediction, extension):
+def process_search_results(git_changes, search_query, ml_prediction, total_secrets_map):
     """
         For the user code content
         Format and clean the code content
@@ -279,7 +273,7 @@ def process_search_results(git_changes, search_query, ml_prediction, extension):
     detection_writes_per_query = 0
     detections_per_query = 0
     global file_prefix
-    secrets_detected = process_file_diffs(git_changes, search_query, extension)
+    secrets_detected = process_file_diffs(git_changes, search_query)
     detections = len(secrets_detected)
     if secrets_detected:
         detections_per_query = detections
@@ -351,6 +345,16 @@ def process_search_results(git_changes, search_query, ml_prediction, extension):
                             configs.output_dir,
                             "xgg_precommit_creds_detected.csv",
                         )
+                        specific_secrets_attributes = secrets_detected_df.loc[:,['File','Code','Score']]
+                        file = ""
+                        for index, row in specific_secrets_attributes.iterrows():
+                            if row['Code'] not in total_secrets_map:
+                                total_secrets_map[row['Code']] = 1
+                                if(row['File'] != file):
+                                    print("The following credentials have been detected:\n")
+                                    print(f"File: {row['File']}")
+                                file = row['File']
+                                print(f"Code: {row['Code']}\nScore: {row['Score']}\n")
                         write_to_csv_file(
                             secrets_detected_df, secrets_detected_file
                         )
@@ -433,7 +437,7 @@ def run_detection(secondary_keywords=[], extensions=[], ml_prediction=False):
             sys.exit(1)
     else:
         # Get the secondary_keywords from secondary_keywords file
-        configs.read_secondary_keywords(file_name="secondary_creds.csv")
+        configs.read_secondary_keywords(file_name="secondary_keys_creds.csv")
     logger.info(f"Total Secondary Keywords: {len(configs.secondary_keywords)}")
 
     if extensions:
@@ -475,50 +479,57 @@ def run_detection(secondary_keywords=[], extensions=[], ml_prediction=False):
         logger.info(f"No Search query to process. Ending.")
         sys.exit(1)
 
+    total_secrets_map = dict()
     # Loop over each extension for each search query
-    for extension in configs.extensions:
-        for search_query in search_query_list:
-            detection_writes_per_query = 0
-            detections_per_query = 0
-            logger.info(
-                f"*******  Processing Search Query: '{search_query} extension:{extension}'  *******"
-            )
-            try:
-                # Search GitHub and return search response confidence_score
-                total_processed_search += 1
-                git_changes = subprocess.check_output(["git", "diff", "--staged"]).decode("utf-8")
-                # If search has detections, process the code changes
-                if git_changes:
-                    (
-                        detection_writes_per_query,
-                        detections_per_query,
-                    ) = process_search_results(
-                        git_changes, search_query, ml_prediction, extension
-                    )
-                    logger.info(
-                        f"Detection writes in current search query: {detection_writes_per_query}"
-                    )
-                    total_detection_writes += detection_writes_per_query
-                else:
-                    # time.sleep(2)
-                    logger.info(
-                        f"Search '{search_query}' returns no results. Continuing..."
-                    )
-                    continue
-            except Exception as e:
-                logger.error(f"Process Error: {e}")
-        logger.info(f"Current Total Processed Search: {total_processed_search}")
-        logger.info(f"Current Total Detections Write: {total_detection_writes}")
-
+    #for extension in configs.extensions:
+    for search_query in search_query_list:
+        detection_writes_per_query = 0
+        detections_per_query = 0
         logger.info(
-            f"Total: {total_search_pairs} "
-            + f"Processed: {total_processed_search} "
-            + f"Detected: {detections_per_query} "
-            + f"Total Writes: {detection_writes_per_query} "
+            f"*******  Processing Search Query: '{search_query}"
         )
+        try:
+            # Search GitHub and return search response confidence_score
+            total_processed_search += 1
+            git_changes = subprocess.check_output(["git", "diff", "--staged"]).decode("utf-8")
+            # If search has detections, process the code changes
+            if git_changes:
+                (
+                    detection_writes_per_query,
+                    detections_per_query,
+                ) = process_search_results(
+                    git_changes, search_query, ml_prediction, total_secrets_map
+                )
+                logger.info(
+                    f"Detection writes in current search query: {detection_writes_per_query}"
+                )
+                total_detection_writes += detection_writes_per_query
+            else:
+                # time.sleep(2)
+                logger.info(
+                    f"Search '{search_query}' returns no results. Continuing..."
+                )
+                continue
+        except Exception as e:
+            logger.error(f"Process Error: {e}")
+
+    logger.info(f"Current Total Processed Search: {total_processed_search}")
+    logger.info(f"Current Total Detections Write: {total_detection_writes}")
+
+    logger.info(
+        f"Total: {total_search_pairs} "
+        + f"Processed: {total_processed_search} "
+        + f"Detected: {detections_per_query} "
+        + f"Total Writes: {detection_writes_per_query} "
+    )
 
     logger.info(f"Total Processed Search: {total_processed_search}")
     logger.info(f"Total Detections Write: {total_detection_writes}")
+
+    if total_detection_writes > 0:
+        print("\nIf these are not credentials, use --no-verify to bypass this check:")
+        print("\ngit commit -m 'message' --no-verify")
+
     return True
 
 
@@ -533,7 +544,7 @@ def setup_logger(log_level=10, console_logging=True):
     global logger
     # Creates a logger
     logger = create_logger(
-        log_level, console_logging, log_dir=log_dir, log_file_name=log_file_name
+        log_level, console_logging, log_dir=log_dir, log_file_name=log_file_name, show_current_run_logs=False
     )
 
 

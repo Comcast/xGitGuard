@@ -86,16 +86,11 @@ secrets:
         "File",
         "Secret",
         "Code",
-        "Detected_Timestamp",
         "Key_Weight",
         "SKey_Count",
         "Entropy",
         "Dictionary_Similarity",
-        "Score",
-        "Year",
-        "Month",
-        "Day",
-        "Hour",
+        "Score"
     ]
   public_data_collector_columns:
     [

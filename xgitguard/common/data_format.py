@@ -118,6 +118,53 @@ def remove_url_from_creds(code_content, key):
     codes_list = code_data.split()
     return codes_list
 
+def clean_cred(code_content, key, index, start):
+    """
+    Replace special chars in the given code content data
+    params: code_content - string - code data
+    returns: data - string - Cleaned up code data
+    """
+    code_data = re.sub(
+        r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+",
+        " ",
+        code_content,
+    )
+    code_data = re.sub("[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+", " ", code_data)
+
+    special_chars = [
+        "'",
+        '"',
+        "#",
+        "%",
+        "&",
+        "(",
+        ")",
+        "*",
+        "+",
+        ",",
+        "-",
+        ".",
+        "/",
+        ":",
+        ";",
+        "<",
+        "=",
+        ">",
+        "?",
+        "[",
+        "\\",
+        "]",
+        "`",
+        "{",
+        "|",
+        "}",
+        "~",
+    ]
+    # Remove special characters if present
+    for special_char in special_chars:
+        code_data = code_data.replace(special_char, " ")
+    codes_list = code_data.split()
+    return codes_list
 
 def keys_extractor(code_content):
     """

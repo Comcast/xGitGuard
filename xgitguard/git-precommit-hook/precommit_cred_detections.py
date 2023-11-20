@@ -50,8 +50,10 @@ import math
 import os
 import re
 import sys
+import time
 from datetime import datetime
 import subprocess
+import concurrent.futures
 
 
 import pandas as pd
@@ -66,7 +68,7 @@ from common.configs_read import ConfigsData
 from common.data_format import (
     credential_extractor,
     format_commit_details,
-    remove_url_from_creds
+    clean_cred
 )
 from common.logger import create_logger
 from common.ml_process import entropy_calc, ml_prediction_process
@@ -78,7 +80,7 @@ from utilities.common_utilities import check_github_token_env
 file_prefix = "xgg_"
 
 
-def calculate_confidence(secondary_keyword, secret):
+def calculate_confidence(secondary_keyword, secret, configs):
     """
     Calculates confidence scores for given Keywords
     params: secondary_keyword - string
@@ -87,21 +89,6 @@ def calculate_confidence(secondary_keyword, secret):
     returns: confidence score
     """
     # logger.debug("<<<< 'Current Executing Function' >>>>")
-    try:
-        if not configs.confidence_values.empty:
-            pass
-    except:
-        configs.read_confidence_values(file_name="confidence_values.csv")
-    try:
-        if not configs.dictionary_words.empty:
-            pass
-    except:
-        # Get the dictionary_words from dictionary words file
-        configs.read_dictionary_words(file_name="dictionary_words.csv")
-        logger.info(
-            "Reading dictionary_words.csv file completed. Proceeding for search result processing"
-        )
-
     secondary_keyword_value = int(
         configs.confidence_values.loc[secondary_keyword]["value"]
     )
@@ -117,7 +104,7 @@ def calculate_confidence(secondary_keyword, secret):
     return [sum([secondary_keyword_value, extension_value]), entro, d_match[0]]
 
 
-def format_detection(file, skeyword, code_contents, secrets, skeyword_count):
+def format_detection(file, skeyword, code_contents, secrets, skeyword_count, configs):
     """
     Format the secret data from the given code content and other data
         Format the secrets data in the required format
@@ -141,7 +128,7 @@ def format_detection(file, skeyword, code_contents, secrets, skeyword_count):
     logger.debug("<<<< 'Current Executing Function calculate_confidence loop' >>>>")
     for secret in secrets:
         # Calculate confidence values for detected secrets
-        confidence_score = calculate_confidence(skeyword, secret)
+        confidence_score = calculate_confidence(skeyword, secret, configs)
         if confidence_score[1] > 1.5:
             valid_secret_row = [value for value in secret_data]
             secret_lines = re.findall(".*" + secret + ".*$", code_contents, re.MULTILINE)
@@ -205,7 +192,7 @@ def format_detection(file, skeyword, code_contents, secrets, skeyword_count):
     return secrets_data_list
 
 
-def process_file_diffs(code_contents, search_query):
+def process_file_diffs(code_contents, search_query, configs, index):
     """
         Extract secret values using regex
         Format the secrets detected
@@ -220,40 +207,41 @@ def process_file_diffs(code_contents, search_query):
 
     file = ""
     for line in code_contents.split("\n"):
+        start = time.time()
         if(line):
             if(line.strip().startswith("+++")):
                 file = line[6:]
-            parsed_line = remove_url_from_creds(line, skeyword)
-            if(parsed_line):
-                try:
+            else:
+                parsed_line = clean_cred(line, skeyword, index, start)
+                if(parsed_line):
                     try:
-                        # for Reading Data only one time
-                        if configs.stop_words:
-                            pass
-                    except:
-                        configs.read_stop_words(file_name="stop_words.csv")
+                        try:
+                            # for Reading Data only one time
+                            if configs.stop_words:
+                                pass
+                        except:
+                            configs.read_stop_words(file_name="stop_words.csv")
+                        secrets_data = credential_extractor(parsed_line, configs.stop_words)
 
-                    secrets_data = credential_extractor(parsed_line, configs.stop_words)
-
-                    skeyword_count = " ".join(parsed_line).lower().count(skeyword.lower())
-                    if len(secrets_data) >= 1 and len(secrets_data) <= 20:
-                        clean_line = "".join(line).lower()[1:].strip()
-                        secret_data_list = format_detection(file,
-                            skeyword, "".join(clean_line).lower(), secrets_data, skeyword_count
-                        )
-                        if secret_data_list:
-                            for secret_data in secret_data_list:
-                                secrets_data_list.append(secret_data)
-                    else:
-                        logger.debug(
-                            f"Skipping secrets_data as length is not between 1 to 20. Length: {len(secrets_data)}"
-                        )
-                except Exception as e:
-                    logger.error(f"Total Process Search (Exception Error): {e}")
+                        skeyword_count = " ".join(parsed_line).lower().count(skeyword.lower())
+                        if len(secrets_data) >= 1 and len(secrets_data) <= 20:
+                            clean_line = "".join(line).lower()[1:].strip()
+                            secret_data_list = format_detection(file,
+                                skeyword, "".join(clean_line).lower(), secrets_data, skeyword_count, configs
+                            )
+                            if secret_data_list:
+                                for secret_data in secret_data_list:
+                                    secrets_data_list.append(secret_data)
+                        else:
+                            logger.debug(
+                                f"Skipping secrets_data as length is not between 1 to 20. Length: {len(secrets_data)}"
+                            )
+                    except Exception as e:
+                        logger.error(f"Total Process Search (Exception Error): {e}")
     return secrets_data_list
 
 
-def process_search_results(git_changes, search_query, ml_prediction, total_secrets_map):
+def process_search_results(index, git_changes, search_query, ml_prediction, total_secrets_map, configs):
     """
         For the user code content
         Format and clean the code content
@@ -269,11 +257,13 @@ def process_search_results(git_changes, search_query, ml_prediction, total_secre
     returns: detection_writes_per_query - int - Total detections written to file
     returns: detections_per_query - int - No of detections per search
     """
+    #print("Thread: " + str(index) + " started")
     logger.debug("<<<< 'Current Executing Function' >>>>")
     detection_writes_per_query = 0
     detections_per_query = 0
     global file_prefix
-    secrets_detected = process_file_diffs(git_changes, search_query)
+
+    secrets_detected = process_file_diffs(git_changes, search_query, configs, index)
     detections = len(secrets_detected)
     if secrets_detected:
         detections_per_query = detections
@@ -366,7 +356,7 @@ def process_search_results(git_changes, search_query, ml_prediction, total_secre
             )
     else:
         logger.info("No Secrets in current search results")
-    return detection_writes_per_query, detections_per_query
+    return index, detection_writes_per_query, detections_per_query
 
 
 def format_search_query_list(secondary_keywords):
@@ -383,6 +373,13 @@ def format_search_query_list(secondary_keywords):
     logger.info(f"Total search_query_list count: {len(search_query_list)}")
     return search_query_list
 
+def timed(func):
+    def _w(*a, **k):
+        then = time.time()
+        res = func(*a, **k)
+        elapsed = time.time() - then
+        return elapsed, res
+    return _w
 
 def run_detection(secondary_keywords=[], extensions=[], ml_prediction=False):
     """
@@ -420,14 +417,10 @@ def run_detection(secondary_keywords=[], extensions=[], ml_prediction=False):
         run_detection(extension = ["py","txt"])
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
-    # Read and Setup Global Configuration Data to reference in all process
-    try:
-        global configs
-        if configs:
-            pass
-    except:
-        # Setting Global configuration Data
-        configs = ConfigsData()
+    # Read and Setup Configuration Data to reference
+    configs = ConfigsData()
+    configs.read_dictionary_words()
+    configs.read_confidence_values(file_name="confidence_values.csv")
 
     if secondary_keywords:
         if isinstance(secondary_keywords, list):
@@ -482,36 +475,40 @@ def run_detection(secondary_keywords=[], extensions=[], ml_prediction=False):
     total_secrets_map = dict()
     # Loop over each extension for each search query
     #for extension in configs.extensions:
-    for search_query in search_query_list:
-        detection_writes_per_query = 0
-        detections_per_query = 0
+    futures = list()
+    git_changes = subprocess.check_output(["git", "diff", "--staged"]).decode("utf-8")
+
+    with concurrent.futures.ThreadPoolExecutor(100) as executor:
+        i = 0
+        for search_query in search_query_list:
+            i = i + 1
+            detection_writes_per_query = 0
+            detections_per_query = 0
+            logger.info(
+                f"*******  Processing Search Query: '{search_query}"
+            )
+            try:
+                # Search GitHub and return search response confidence_score
+                total_processed_search += 1
+                # If search has detections, process the code changes
+                if git_changes:
+                    futures.append(executor.submit(timed(process_search_results), i, git_changes, search_query, ml_prediction, total_secrets_map, configs))
+                else:
+                    # time.sleep(2)
+                    logger.info(
+                        f"Search '{search_query}' returns no results. Continuing..."
+                    )
+                    continue
+            except Exception as e:
+                logger.error(f"Process Error: {e}")
+
+    for future in concurrent.futures.as_completed(futures):
+        (elapsed, (index, detection_writes_per_query, detections_per_query)) = future.result()
+        #print("Thread: " + str(index) + " finished. Time spent: " + str(elapsed) + " seconds")
         logger.info(
-            f"*******  Processing Search Query: '{search_query}"
+            f"Detection writes in current search query: {detection_writes_per_query}"
         )
-        try:
-            # Search GitHub and return search response confidence_score
-            total_processed_search += 1
-            git_changes = subprocess.check_output(["git", "diff", "--staged"]).decode("utf-8")
-            # If search has detections, process the code changes
-            if git_changes:
-                (
-                    detection_writes_per_query,
-                    detections_per_query,
-                ) = process_search_results(
-                    git_changes, search_query, ml_prediction, total_secrets_map
-                )
-                logger.info(
-                    f"Detection writes in current search query: {detection_writes_per_query}"
-                )
-                total_detection_writes += detection_writes_per_query
-            else:
-                # time.sleep(2)
-                logger.info(
-                    f"Search '{search_query}' returns no results. Continuing..."
-                )
-                continue
-        except Exception as e:
-            logger.error(f"Process Error: {e}")
+        total_detection_writes += detection_writes_per_query
 
     logger.info(f"Current Total Processed Search: {total_processed_search}")
     logger.info(f"Current Total Detections Write: {total_detection_writes}")

@@ -584,7 +584,7 @@ def arg_parser():
         metavar="Logger Level",
         action="store",
         type=int,
-        default=20,
+        default=40,
         choices=log_level_choices,
         help="Pass the Logging level as for CRITICAL - 50, ERROR - 40  WARNING - 30  INFO  - 20  DEBUG - 10. Default is 20",
     )
@@ -625,7 +625,7 @@ def arg_parser():
     if args.log_level in log_level_choices:
         log_level = args.log_level
     else:
-        log_level = 20
+        log_level = 40
     if args.console_logging.lower() in flag_choices[:5]:
         console_logging = True
     else:
@@ -641,6 +641,7 @@ def arg_parser():
     )
 
 if __name__ == "__main__":
+    multiprocessing.freeze_support()
     (
         secondary_keywords,
         extensions,

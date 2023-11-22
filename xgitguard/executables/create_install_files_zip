@@ -1,0 +1,7 @@
+pyinstaller ../git-precommit-hook/xgitguard_precommit_cred_detections.py --hidden-import=sklearn.feature_extraction.text --hidden-import=urlextract --hidden-import=sklearn.model_selection --hidden-import=sklearn.ensemble
+
+zip -r xgitguard-precommit-hook.zip pre-commit
+cd dist/xgitguard_precommit_cred_detections
+zip -r ../../xgitguard-precommit-hook.zip xgitguard_precommit_cred_detections
+zip -r ../../xgitguard-precommit-hook.zip _internal
+chmod 777 ../../xgitguard-precommit-hook.zip

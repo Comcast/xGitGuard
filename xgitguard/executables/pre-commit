@@ -1,6 +1,6 @@
 results=$(python3 /Users/sparri919/Documents/GitHub/xGitGuard/xgitguard/git-precommit-hook/precommit_cred_detections.py -l 40)
 echo "$results"
-if grep -q "The following credentials have been detected" <<< "$results"; then
+if grep -q "no-verify" <<< "$results"; then
     exit 1;
 else
     exit 0;

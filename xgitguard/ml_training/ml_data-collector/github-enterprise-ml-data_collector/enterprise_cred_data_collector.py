@@ -687,9 +687,9 @@ if __name__ == "__main__":
 
     configs = ConfigsData()
     githubCalls = GithubCalls(
-        configs.xgg_configs["github"]["public_api_url"],
-        "public",
-        configs.xgg_configs["github"]["public_commits_url"],
+        configs.xgg_configs["github"]["enterprise_api_url"],
+        "enterprise",
+        configs.xgg_configs["github"]["enterprise_commits_url"],
     )
 
     valid_config, token_var = check_github_token_env("enterprise")

@@ -656,7 +656,7 @@ def run_detection(
                     search_query,
                     extension,
                 )
-                logger.info(search_response_lines)
+
                 # If search has detections, process the result urls else continue next search
                 if search_response_lines:
                     (

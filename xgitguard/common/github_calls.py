@@ -201,9 +201,7 @@ class GithubCalls:
         returns: response - string
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
-        full_commit_url = self._commits_api_url.format(
-            user_name=user_name, repo_name=repo_name, file_path=file_path
-        )
+        full_commit_url = self._commits_api_url % (user_name, repo_name, file_path)
         token_var = "GITHUB_TOKEN"
         if not os.getenv(token_var):
             logger.error(

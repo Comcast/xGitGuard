@@ -814,7 +814,7 @@ if __name__ == "__main__":
     githubCalls = GithubCalls(
         configs.xgg_configs["github"]["enterprise_api_url"],
         "enterprise",
-        configs.xgg_configs["github"]["public_commits_url"],
+        configs.xgg_configs["github"]["enterprise_commits_url"],
     )
 
     logger.info("xGitGuard Enterprise Keys and Token Detection Process Started")

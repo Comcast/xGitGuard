@@ -51,9 +51,9 @@ MODULE_DIR = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.dirname(os.path.dirname(os.path.dirname(MODULE_DIR)))
 sys.path.insert(0, parent_dir)
 
+from common.github_calls import GithubCalls
 from common.configs_read import ConfigsData
 from common.data_format import credential_extractor, remove_url_from_creds
-from common.github_calls import enterprise_url_content_get, run_github_search
 from common.logger import create_logger
 from common.ml_process import entropy_calc
 from utilities.common_utilities import check_github_token_env
@@ -218,7 +218,7 @@ def process_search_urls(org_urls_list, url_list, search_query):
     try:
         for url in url_list:
             header = configs.xgg_configs["github"]["enterprise_header"]
-            code_content_response = enterprise_url_content_get(url, header)
+            code_content_response = githubCalls.enterprise_url_content_get(url, header)
             if code_content_response:
                 code_content = code_content_response.text
             else:
@@ -242,7 +242,7 @@ def process_search_urls(org_urls_list, url_list, search_query):
             lines = code_content.split("\n")
             if len(lines) <= 2:
                 logger.debug(
-                    f"Skiping processing URL extract from code content as url lines is beyond 2: {len(lines)}"
+                    f"Skipping processing URL extract from code content as url lines is beyond 2: {len(lines)}"
                 )
                 continue
 
@@ -492,14 +492,6 @@ def run_data_collector(secondary_keywords=[], extensions=[]):
         run_data_collector(extension = ["py","txt"])
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
-    # Read and Setup Global Configuration Data to reference in all process
-    try:
-        global configs
-        if configs:
-            pass
-    except:
-        # Setting Global configuration Data
-        configs = ConfigsData()
 
     if secondary_keywords:
         if isinstance(secondary_keywords, list):
@@ -547,11 +539,9 @@ def run_data_collector(secondary_keywords=[], extensions=[]):
                 # Search GitHub and return search response confidence_score
                 total_processed_search += 1
                 # time.sleep(2)
-                search_response_lines = run_github_search(
-                    configs.xgg_configs["github"]["enterprise_api_url"],
+                search_response_lines = githubCalls.run_github_search(
                     search_query,
                     extension,
-                    "enterprise",
                 )
                 # If search has detections, process the result urls else continue next search
                 if search_response_lines:
@@ -694,6 +684,14 @@ if __name__ == "__main__":
     setup_logger(log_level, console_logging)
 
     logger.info("xGitGuard Enterprise Credentials Data Collection Process Started")
+
+    configs = ConfigsData()
+    githubCalls = GithubCalls(
+        configs.xgg_configs["github"]["enterprise_api_url"],
+        "enterprise",
+        configs.xgg_configs["github"]["enterprise_commits_url"],
+    )
+
     valid_config, token_var = check_github_token_env("enterprise")
     if not valid_config:
         logger.error(

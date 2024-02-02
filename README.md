@@ -653,6 +653,13 @@ Traverse into the "ml_training" folder
   > - If persisted model **xgitguard\output\public\_\*xgg\*.pickle** is not present in the output folder, then use feature engineered data to create a model and persist it.
   > - By default, when feature engineered data collected in Public mode not available, then model creation will be using enterprise-based engineered data.
 
+##### Future Areas of Focus
+
+Search for and help identify:
+Oauth credential identification
+Callouts which could contain static credentials located elsewhere
+
+
 ### Additional Important Notes
 
 - Users can update confidence_values.csv based on secondary_keys, secondary_creds, extensions value and give scoring from level 0 (lowest) to 5 (highest) to denote associated keyword suspiciousness.

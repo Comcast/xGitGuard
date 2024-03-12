@@ -71,6 +71,12 @@ Designed and Developed by Comcast Cybersecurity Research and Development Team</p
   python -m pip install -r requirements.txt
   ```
 
+- Check for Outdated Packages
+
+  ```
+  pip list --outdated
+  ```
+  
 ## Search Patterns
 
 - There are two ways to define configurations in xGitGuard

@@ -4,7 +4,7 @@
 <i><b>Detect Secrets (API Tokens, Usernames, Passwords, etc.) Exposed on GitHub Repositories</b></i><br>
 Designed and Developed by Comcast Cybersecurity Research and Development Team</p>
 
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/{yukesh-thamil}/{xGitGuard}/badge)](https://securityscorecards.dev/viewer/?uri=github.com/{yukesh-thamil}/{xGitGuard})[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/yukesh-thamil/xGitGuard/badge)](https://securityscorecards.dev/viewer/?uri=github.com/yukesh-thamil/xGitGuard)[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 ---
 

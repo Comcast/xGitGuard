@@ -8,9 +8,11 @@ Comcast maintainers are responsible for overseeing the development and maintenan
 
 | Name               | GitHub Handle Card  |
 |--------------------|----------------------|
-| David Jayaseelan   | [![David Jayaseelan](https://img.shields.io/badge/GitHub-davidjayaseelan-blue?logo=github)](https://github.com/davidjayaseelan)   |
+| Dinesh Prakash  | [![Dinesh Prakash](https://img.shields.io/badge/GitHub-dinpraka-blue?logo=github)](https://github.com/dinpraka)
+| David Jayaseelan   | [![David Jayaseelan](https://img.shields.io/badge/GitHub-davidjayaseelan-blue?logo=github)](https://github.com/jay6david)   |
 | Adhithya Rajasekaran | [![Adhithya Rajasekaran](https://img.shields.io/badge/GitHub-radhi1991-blue?logo=github)](https://github.com/radhi1991)  |
 | Gowtham Raj J      | [![Gowtham Raj J](https://img.shields.io/badge/GitHub-jgowthamr-blue?logo=github)](https://github.com/jgowthamr) |
+| Sai Sundar      |  
 
 ## External Maintainers
 
@@ -25,13 +27,6 @@ External maintainers come from various organizations and institutions, contribut
 | Saranraj Ilangovan | | BNP Paribas                       |
 | Baskar Ponniyan    | | Hitachi Energy                    |
 
-## Emeritus Maintainers
-
-Emeritus maintainers are individuals who have made significant contributions to xGitGuard in the past but are no longer actively maintaining the project. We acknowledge and appreciate their past efforts.
-
-| Name            | GitHub Handle Card  |
-|-----------------|----------------------|
-| Dinesh Prakash  | [![Dinesh Prakash](https://img.shields.io/badge/GitHub-dinpraka-blue?logo=github)](https://github.com/dinpraka)  | 🌟 Emeritus Maintainer            |
 
 ## Contact
 

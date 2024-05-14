@@ -12,7 +12,7 @@ Comcast maintainers are responsible for overseeing the development and maintenan
 | David Jayaseelan   | [![David Jayaseelan](https://img.shields.io/badge/GitHub-davidjayaseelan-blue?logo=github)](https://github.com/jay6david)   |
 | Adhithya Rajasekaran | [![Adhithya Rajasekaran](https://img.shields.io/badge/GitHub-radhi1991-blue?logo=github)](https://github.com/radhi1991)  |
 | Gowtham Raj J      | [![Gowtham Raj J](https://img.shields.io/badge/GitHub-jgowthamr-blue?logo=github)](https://github.com/jgowthamr) |
-| Sai Sundar      |  
+| Sai Sundar      |  [![Sai Sundar](https://img.shields.io/badge/GitHub-sai100-blue?logo=github)](https://github.com/sai100) |
 
 ## External Maintainers
 

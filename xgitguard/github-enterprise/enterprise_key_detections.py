@@ -15,6 +15,7 @@ limitations under the License.
 
 SPDX-License-Identifier: Apache-2.0
 """
+
 """
 xGitGuard Enterprise GitHub Keys and Token Detection Process
     xGitGuard detects the secret keys and tokens present in the enterprise Github repository
@@ -514,7 +515,9 @@ def format_search_query_list(secondary_keywords):
     return search_query_list
 
 
-def run_detection(secondary_keywords=[], extensions=[], ml_prediction=False):
+def run_detection(
+    secondary_keywords=[], extensions=[], ml_prediction=False, org=[], repo=[]
+):
     """
     Run GitHub detections
     Run search with Secondary Keywords and extension combination
@@ -534,6 +537,8 @@ def run_detection(secondary_keywords=[], extensions=[], ml_prediction=False):
     params: secondary_keywords - list - optional
     params: extensions - list - optional
     params: ml_prediction - Boolean - optional - Default: False
+    params: org - list - optional
+    params: repo - list - optional
     returns: True or False
 
     Examples:
@@ -617,8 +622,7 @@ def run_detection(secondary_keywords=[], extensions=[], ml_prediction=False):
                 # Search GitHub and return search response confidence_score
                 total_processed_search += 1
                 search_response_lines = githubCalls.run_github_search(
-                    search_query,
-                    extension,
+                    search_query, extension, org, repo
                 )
                 # If search has detections, process the result urls else continue next search
                 if search_response_lines:
@@ -681,6 +685,8 @@ def arg_parser():
     returns: extensions - list
     returns: ml_prediction - Boolean - Default - False
     returns: unmask_secret - Boolean - Default - False
+    returns: org - list
+    returns: repo - list
     returns: log_level - int - Default - 20  - INFO
     returns: console_logging - Boolean - Default - True
     """
@@ -734,6 +740,26 @@ def arg_parser():
     )
 
     argparser.add_argument(
+        "-o",
+        "--org",
+        metavar="Owner",
+        action="store",
+        type=str,
+        default="",
+        help="Pass the Org name list as comma separated string",
+    )
+
+    argparser.add_argument(
+        "-r",
+        "--repo",
+        metavar="Repo",
+        action="store",
+        type=str,
+        default="",
+        help="Pass the repo name list as comma separated string",
+    )
+
+    argparser.add_argument(
         "-l",
         "--log_level",
         metavar="Logger Level",
@@ -777,6 +803,19 @@ def arg_parser():
     else:
         unmask_secret = False
 
+    if args.org:
+        org = args.org.split(",")
+    else:
+        org = []
+
+    if args.repo:
+        if len(org) <= 0:
+            repo = args.repo.split(",")
+        else:
+            repo = []
+    else:
+        repo = []
+
     if args.log_level in log_level_choices:
         log_level = args.log_level
     else:
@@ -791,6 +830,8 @@ def arg_parser():
         extensions,
         ml_prediction,
         unmask_secret,
+        org,
+        repo,
         log_level,
         console_logging,
     )
@@ -803,6 +844,8 @@ if __name__ == "__main__":
         extensions,
         ml_prediction,
         unmask_secret,
+        org,
+        repo,
         log_level,
         console_logging,
     ) = arg_parser()
@@ -830,6 +873,6 @@ if __name__ == "__main__":
         )
         sys.exit(1)
 
-    run_detection(secondary_keywords, extensions, ml_prediction)
+    run_detection(secondary_keywords, extensions, ml_prediction, org, repo)
 
     logger.info("xGitGuard Enterprise Keys and Token Detection Process Completed")

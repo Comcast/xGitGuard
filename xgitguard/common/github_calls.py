@@ -50,37 +50,43 @@ class GithubCalls:
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
 
-        org_list = []
-        repo_list = []
+        org_qualifiers = []
+        repo_qualifiers = []
 
         if len(org) > 0:
-            # Checks if the length of query parameter has exceeded the character limit of 256.
-            org_list = query_length_validator(org, "user")
-            if org_list == -1:
+            # Checks if the length of additional qualifiers has exceeded the character limit of 170.
+            org_qualifiers = query_length_validator(org, "user")
+            if org_qualifiers == -1:
                 logger.error(
-                    "Character Limit reached.Please consider limiting the number of characters in orgs."
+                    "Character Limit reached. Please consider limiting the number of characters in orgs."
                 )
                 sys.exit(1)
 
         elif len(repo) > 0:
-            # Checks if the length of query parameter has exceeded the character limit of 256.
-            repo_list = query_length_validator(repo, "repo")
-            if repo_list == -1:
+            # Checks if the length of additional qualifiers has exceeded the character limit of 170.
+            repo_qualifiers = query_length_validator(repo, "repo")
+            if repo_qualifiers == -1:
                 logger.error(
-                    "Character Limit reached.Please consider limiting the number of characters in repo."
+                    "Character Limit reached. Please consider limiting the number of characters in repo."
                 )
                 sys.exit(1)
 
         if not extension and extension == "others":
-            response = self.__github_api_get_params(search_query, org_list, repo_list)
+            response = self.__github_api_get_params(
+                search_query, org_qualifiers, repo_qualifiers
+            )
         elif self._token_env == "public":
 
             response = self.__github_api_get_params(
-                (search_query + " extension:" + extension), org_list, repo_list
+                (search_query + " extension:" + extension),
+                org_qualifiers,
+                repo_qualifiers,
             )
         else:
             response = self.__github_api_get_params(
-                (search_query + "+extension:" + extension), org_list, repo_list
+                (search_query + " extension:" + extension),
+                org_qualifiers,
+                repo_qualifiers,
             )
 
         if response:
@@ -88,16 +94,17 @@ class GithubCalls:
 
         return []
 
-    def __github_api_get_params(self, search_query, org=[], repo=[]):
+    def __github_api_get_params(
+        self, search_query, org_qualifiers="", repo_qualifiers=""
+    ):
         """
         For the given GITHUB API url and search query, call the api
         Get and return the response
         ### Need GitHub Auth Token as Env variable named "GITHUB_TOKEN"
 
-        params: api_url - string
         params: search_query - string
-        params: org - list
-        params: repo - list
+        params: org_qualifiers - string
+        params: repo_qualifiers - string
         returns: response - dict
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
@@ -119,16 +126,19 @@ class GithubCalls:
             )
             sys.exit(1)
 
-        query_list = []
-        query_list.extend(org)
-        query_list.extend(repo)
+        additional_qualifiers = ""
+        if len(org_qualifiers) > 0:
+            additional_qualifiers = org_qualifiers
+        elif len(repo_qualifiers) > 0:
+            additional_qualifiers = repo_qualifiers
+
         search_response = []
-        if len(query_list) > 0:
+        if additional_qualifiers:
             try:
                 response = requests.get(
                     self._base_url,
                     params={
-                        "q": f"{search_query} {query_list}",
+                        "q": f"{search_query} {additional_qualifiers}",
                         "order": "desc",
                         "sort": "indexed",
                         "per_page": 100,

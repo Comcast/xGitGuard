@@ -708,6 +708,8 @@ def run_detections_from_file(
                         secondary_keywords,
                         extensions,
                         ml_prediction,
+                        org,
+                        repo
                     )
                     status = True
                 except Exception as e:
@@ -745,8 +747,8 @@ def run_detections_from_list(
     params: secondary_keywords - list - optional
     params: extensions - list - optional
     params: ml_prediction - Boolean - optional - Default: False
-    params: org - list
-    params: repo - list
+    params: org - list - optional
+    params: repo - list - optional
     returns: True or False
     returns: None
     """
@@ -912,7 +914,7 @@ def arg_parser():
         action="store",
         type=str,
         default="",
-        help="Pass the repo name list as comma separated string",
+        help="Pass the Repo name list as comma separated string",
     )
 
     argparser.add_argument(
@@ -957,6 +959,11 @@ def arg_parser():
     else:
         ml_prediction = False
 
+    if args.unmask_secret.lower() in flag_choices[:5]:
+        unmask_secret = True
+    else:
+        unmask_secret = False
+
     if args.org:
         org = args.org.split(",")
     else:
@@ -969,11 +976,6 @@ def arg_parser():
             repo = []
     else:
         repo = []
-
-    if args.unmask_secret.lower() in flag_choices[:5]:
-        unmask_secret = True
-    else:
-        unmask_secret = False
 
     if args.log_level in log_level_choices:
         log_level = args.log_level

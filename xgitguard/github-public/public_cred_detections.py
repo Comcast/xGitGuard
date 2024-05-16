@@ -608,7 +608,7 @@ def run_detection(
 
     if primary_keyword:
         logger.info(f"Primary Keyword: {primary_keyword}")
-        total_search_pairs = len(configs.secondary_keywords) * len(configs.extensions)
+        total_search_pairs = len(configs.secondary_keywords) * len(configs.extensions) * len(configs.primary_keyword)
     else:
         logger.error(
             f"No Primary Keywords in Primary_keywords.csv.Please add appropriate domain names or keywords as per requirement.Also refer Readme for more details"

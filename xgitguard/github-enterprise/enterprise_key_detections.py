@@ -184,7 +184,7 @@ def format_detection(skeyword, org_url, url, code_content, secrets, skeyword_cou
             code_line = secret
             for secret_line in secret_lines:
                 if (
-                    (skeyword in secret_line)
+                    (skeyword.lower() in secret_line.lower())
                     and (secret_line != secret)
                     and not (
                         [
@@ -193,7 +193,10 @@ def format_detection(skeyword, org_url, url, code_content, secrets, skeyword_cou
                             if (element in secret_line)
                         ]
                     )
-                    and (secret_line.find(skeyword) < secret_line.find(secret))
+                    and (
+                        secret_line.lower().find(skeyword.lower())
+                        < secret_line.find(secret)
+                    )
                 ):
                     if len(secret_line) < 300:
                         code_line = secret_line

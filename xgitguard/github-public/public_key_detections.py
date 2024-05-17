@@ -183,7 +183,7 @@ def format_detection(pkeyword, skeyword, url, code_content, secrets, keyword_cou
             code_line = secret
             for secret_line in secret_lines:
                 if (
-                    (skeyword in secret_line)
+                    (skeyword.lower() in secret_line.lower())
                     and (secret_line != secret)
                     and not (
                         [
@@ -192,7 +192,10 @@ def format_detection(pkeyword, skeyword, url, code_content, secrets, keyword_cou
                             if (element in secret_line)
                         ]
                     )
-                    and (secret_line.find(skeyword) < secret_line.find(secret))
+                    and (
+                        secret_line.lower().find(skeyword.lower())
+                        < secret_line.find(secret)
+                    )
                 ):
                     if len(secret_line) < 300:
                         code_line = secret_line
@@ -583,10 +586,7 @@ def run_detection(
 
     if primary_keyword:
         logger.info(f"Primary Keyword: {primary_keyword}")
-        total_search_pairs = (
-            len(configs.secondary_keywords)
-            * len(configs.extensions)
-        )
+        total_search_pairs = len(configs.secondary_keywords) * len(configs.extensions)
     else:
         logger.error(
             f"No Primary Keywords in Primary_keywords.csv.Please add appropriate domain names or keywords as per requirement.Also refer Readme for more details"
@@ -708,7 +708,7 @@ def run_detections_from_file(
                         extensions,
                         ml_prediction,
                         org,
-                        repo
+                        repo,
                     )
                     status = True
                 except Exception as e:

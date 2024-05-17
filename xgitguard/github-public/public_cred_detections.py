@@ -186,7 +186,7 @@ def format_detection(pkeyword, skeyword, url, code_content, secrets, keyword_cou
             for secret_line in secret_lines:
                 if (
                     (
-                        (skeyword in secret_line)
+                        (skeyword.lower() in secret_line.lower())
                         and (secret_line != secret)
                         and not (
                             [
@@ -195,7 +195,10 @@ def format_detection(pkeyword, skeyword, url, code_content, secrets, keyword_cou
                                 if (element in secret_line)
                             ]
                         )
-                        and (secret_line.find(skeyword) < secret_line.find(secret))
+                        and (
+                            secret_line.lower().find(skeyword.lower())
+                            < secret_line.find(secret)
+                        )
                     )
                     and (
                         (

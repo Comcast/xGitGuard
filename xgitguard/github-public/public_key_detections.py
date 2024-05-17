@@ -586,7 +586,6 @@ def run_detection(
         total_search_pairs = (
             len(configs.secondary_keywords)
             * len(configs.extensions)
-            * len(primary_keyword)
         )
     else:
         logger.error(

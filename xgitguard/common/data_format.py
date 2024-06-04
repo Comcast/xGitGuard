@@ -127,7 +127,7 @@ def keys_extractor(code_content):
     """
 
     regexes = {
-        "AWS Tokens": "(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}",
+        "AWS Tokens": "(?:A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}",
         "AWS Access Key ID": "[0-9a-zA-Z/+=]{40}",
         "Google OAuth Secret": "[0-9a-zA-Zn\-_]{24}",
         "Google OAuth Auth Code": "4/[0-9A-Za-zn\-_]+",

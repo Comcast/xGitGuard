@@ -161,11 +161,25 @@ User Needs to follow the below process to collect data and train the model to us
 python enterprise_cred_detections.py -m Yes
 ```
 
+##### Command to Run Enterprise Credentials Scanner for targeted organization
+
+```
+# Run for targeted org,
+python enterprise_cred_detections.py -o org_name        #Ex: python enterprise_cred_detections.py -o test_org
+```
+
+##### Command to Run Enterprise Credentials Scanner for targeted repo
+
+```
+# Run for targeted repo,
+python enterprise_cred_detections.py -r org_name/repo_name     #Ex: python enterprise_cred_detections.py -r test_org/public_docker
+```
+
 ##### Command-Line Arguments for Credential Scanner
 
 ```
 Run usage:
-enterprise_cred_detections.py [-h] [-s Secondary Keywords] [-e Extensions] [-m Ml prediction][-u Unmask Secret][-l Logger Level] [-c Console Logging]
+enterprise_cred_detections.py [-h] [-s Secondary Keywords] [-e Extensions] [-m Ml prediction] [-u Unmask Secret] [-o org_name] [-r repo_name] [-l Logger Level] [-c Console Logging]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -177,6 +191,8 @@ optional arguments:
                           Pass the ML Filter as Yes or No. Default is No
   -u Set Unmask, --unmask_secret To write secret unmasked, then set Yes
                           Pass the flag as Yes or No. Default is No
+  -o pass org name, --org Pass the targeted org list as a comma-separated string
+  -r pass repo name, --repo Pass the targeted repo list as a comma-separated string
   -l Logger Level, --log_level Logger Level
                           Pass the Logging level as for CRITICAL - 50, ERROR - 40 WARNING - 30 INFO - 20 DEBUG - 10. Default is 20
   -c Console Logging, --console_logging Console Logging
@@ -202,6 +218,21 @@ By default, the Keys and Tokens Secrets Detection script runs for given Secondar
 # Run with Default configs
 python enterprise_key_detections.py
 ```
+
+##### Command to Run Enterprise Keys and Tokens Scanner for targeted organization
+
+```
+# Run for targeted org,
+python enterprise_key_detections.py -o org_name        #Ex: python enterprise_key_detections.py -o test_org
+```
+
+##### Command to Run Enterprise Keys and Tokens Scanner for targeted repo
+
+```
+# Run for targeted repo,
+python enterprise_key_detections.py -r org_name/repo_name     #Ex: python enterprise_key_detections.py -r test_org/public_docker
+```
+
 
 ##### Detections With ML Filter
 
@@ -229,7 +260,7 @@ python enterprise_key_detections.py -m Yes
 
 ```
 Run usage:
-enterprise_key_detections.py [-h] [-s Secondary Keywords] [-e Extensions] [-m Ml prediction][-u Unmask Secret][-l Logger Level] [-c Console Logging]
+enterprise_key_detections.py [-h] [-s Secondary Keywords] [-e Extensions] [-m Ml prediction] [-u Unmask Secret] [-o org_name] [-r repo_name] [-l Logger Level] [-c Console Logging]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -241,6 +272,8 @@ optional arguments:
                           Pass the ML Filter as Yes or No. Default is No
   -u Set Unmask, --unmask_secret To write secret unmasked, then set Yes
                           Pass the flag as Yes or No. Default is No
+  -o pass org name, --org Pass the targeted org list as a comma-separated string
+  -r pass repo name, --repo Pass the targeted repo list as a comma-separated string
   -l Logger Level, --log_level Logger Level
                           Pass the Logging level as for CRITICAL - 50, ERROR - 40 WARNING - 30 INFO - 20 DEBUG - 10. Default is 20
   -c Console Logging, --console_logging Console Logging
@@ -307,6 +340,20 @@ By default, Credential Secrets Detection script runs for given Primary Keyword, 
 python public_cred_detections.py
 ```
 
+##### Command to Run Public Credential Scanner for targeted organization
+
+```
+# Run for targeted org,
+python public_cred_detections.py -o org_name         #Ex: python public_cred_detections.py -o test_org
+```
+
+##### Command to Run Public Credential Scanner for targeted repo
+
+```
+# Run for targeted repo,
+python public_cred_detections.py -r org_name/repo_name        #Ex: python public_cred_detections.py -r test_org/public_docker
+```
+
 ##### Detections With ML Filter
 
 xGitGuard also has an additional ML filter, where users can collect their organization/targeted data and train their model. Having this ML filter helps in reducing the false positives from the detection.
@@ -332,7 +379,7 @@ python public_cred_detections.py -m Yes
 
 ```
 Run usage:
-usage: public_cred_detections.py [-h] [-p Primary Keywords] [-s Secondary Keywords] [-e Extensions] [-m Ml prediction][-u Unmask Secret] [-l Logger Level] [-c Console Logging]
+usage: public_cred_detections.py [-h] [-p Primary Keywords] [-s Secondary Keywords] [-e Extensions] [-m Ml prediction] [-u Unmask Secret] [-o org_name] [-r repo_name] [-l Logger Level] [-c Console Logging]
 
 optional arguments:
 -h, --help show this help message and exit
@@ -346,6 +393,8 @@ Pass the Extensions list as a comma-separated string
                           Pass the ML Filter as Yes or No. Default is No
 -u Set Unmask, --unmask_secret To write secret unmasked, then set Yes
                           Pass the flag as Yes or No. Default is No
+-o pass org name, --org Pass the targeted org list as a comma-separated string
+-r pass repo name, --repo Pass the targeted repo list as a comma-separated string
 -l Logger Level, --log_level Logger Level
 Pass the Logging level as for CRITICAL - 50, ERROR - 40 WARNING - 30 INFO - 20 DEBUG - 10. Default is 20
 -c Console Logging, --console_logging Console Logging
@@ -375,6 +424,20 @@ By default, Keys and Tokens Secret Detection script runs for given Primary Keywo
 python public_key_detections.py
 ```
 
+##### Command to Run Public Keys and Tokens Scanner for targeted organization
+
+```
+# Run  for targeted org,
+python public_key_detections.py -o org_name           #Ex: python public_key_detections.py -o test_org
+```
+
+##### Command to Run Public Keys and Tokens Scanner for targeted repo
+
+```
+# Run for targeted repo,
+python public_key_detections.py -r org_name/repo_name      #Ex: python public_key_detections.py -r test_org/public_docker
+```
+
 ##### Detections With ML Filter
 
 xGitGuard also has an additional ML filter, where users can collect their organization/targeted data and train their model. Having this ML filter helps in reducing the false positives from the detection.
@@ -399,7 +462,7 @@ python public_key_detections.py -m Yes
 
 ```
 usage:
-public_key_detections.py [-h] [-s Secondary Keywords] [-e Extensions] [-m Ml prediction][-u Unmask Secret] [-l Logger Level] [-c Console Logging]
+public_key_detections.py [-h] [-s Secondary Keywords] [-e Extensions] [-m Ml prediction][-u Unmask Secret] [-o org_name] [-r repo_name] [-l Logger Level] [-c Console Logging]
 
 optional arguments:
 -h, --help show this help message and exit
@@ -411,6 +474,8 @@ Pass the Extensions list as a comma-separated string
                           Pass the ML Filter as Yes or No. Default is No
 -u Set Unmask, --unmask_secret To write secret unmasked, then set Yes
                           Pass the flag as Yes or No. Default is No
+-o pass org name, --org Pass the targeted org list as a comma-separated string
+-r pass repo name, --repo Pass the targeted repo list as a comma-separated string
 -l Logger Level, --log_level Logger Level
 Pass the Logging level as for CRITICAL - 50, ERROR - 40 WARNING - 30 INFO - 20 DEBUG - 10. Default is 20
 -c Console Logging, --console_logging Console Logging

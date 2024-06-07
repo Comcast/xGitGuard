@@ -15,6 +15,7 @@ limitations under the License.
 
 SPDX-License-Identifier: Apache-2.0
 """
+
 """
 xGitGuard Public GitHub Keys and Token Detection process
     xGitGuard detects the secret keys and tokens present in the public Github repository
@@ -182,7 +183,7 @@ def format_detection(pkeyword, skeyword, url, code_content, secrets, keyword_cou
             code_line = secret
             for secret_line in secret_lines:
                 if (
-                    (skeyword in secret_line)
+                    (skeyword.lower() in secret_line.lower())
                     and (secret_line != secret)
                     and not (
                         [
@@ -191,7 +192,10 @@ def format_detection(pkeyword, skeyword, url, code_content, secrets, keyword_cou
                             if (element in secret_line)
                         ]
                     )
-                    and (secret_line.find(skeyword) < secret_line.find(secret))
+                    and (
+                        secret_line.lower().find(skeyword.lower())
+                        < secret_line.find(secret)
+                    )
                 ):
                     if len(secret_line) < 300:
                         code_line = secret_line
@@ -511,6 +515,8 @@ def run_detection(
     secondary_keywords=[],
     extensions=[],
     ml_prediction=False,
+    org=[],
+    repo=[],
 ):
     """
     Run GitHub detections
@@ -533,6 +539,8 @@ def run_detection(
     params: secondary_keywords - list - optional
     params: extensions - list - optional
     params: ml_prediction - Boolean - optional - Default: False
+    params: org - list - optional
+    params: repo - list - optional
     returns: True or False
 
     Examples:
@@ -578,11 +586,7 @@ def run_detection(
 
     if primary_keyword:
         logger.info(f"Primary Keyword: {primary_keyword}")
-        total_search_pairs = (
-            len(configs.secondary_keywords)
-            * len(configs.extensions)
-            * len(primary_keyword)
-        )
+        total_search_pairs = len(configs.secondary_keywords) * len(configs.extensions)
     else:
         logger.error(
             f"No Primary Keywords in Primary_keywords.csv.Please add appropriate domain names or keywords as per requirement.Also refer Readme for more details"
@@ -632,8 +636,7 @@ def run_detection(
                 # Search GitHub and return search response confidence_score
                 total_processed_search += 1
                 search_response_lines = githubCalls.run_github_search(
-                    search_query,
-                    extension,
+                    search_query, extension, org, repo
                 )
                 # If search has detections, process the result urls else continue next search
                 if search_response_lines:
@@ -673,12 +676,16 @@ def run_detection(
     return True
 
 
-def run_detections_from_file(secondary_keywords=[], extensions=[], ml_prediction=False):
+def run_detections_from_file(
+    secondary_keywords=[], extensions=[], ml_prediction=False, org=[], repo=[]
+):
     """
     Run detection for Primary Keywords present in the default config file
     params: secondary_keywords - list - optional
     params: extensions - list - optional
     params: ml_prediction - Boolean - optional - Default: False
+    params: org - list - optional
+    params: repo - list - optional
     returns: True or False
     returns: None
     """
@@ -700,6 +707,8 @@ def run_detections_from_file(secondary_keywords=[], extensions=[], ml_prediction
                         secondary_keywords,
                         extensions,
                         ml_prediction,
+                        org,
+                        repo,
                     )
                     status = True
                 except Exception as e:
@@ -728,6 +737,8 @@ def run_detections_from_list(
     secondary_keywords=[],
     extensions=[],
     ml_prediction=False,
+    org=[],
+    repo=[],
 ):
     """
     Run detection for Primary Keywords present in the given input list
@@ -735,6 +746,8 @@ def run_detections_from_list(
     params: secondary_keywords - list - optional
     params: extensions - list - optional
     params: ml_prediction - Boolean - optional - Default: False
+    params: org - list - optional
+    params: repo - list - optional
     returns: True or False
     returns: None
     """
@@ -772,6 +785,8 @@ def run_detections_from_list(
                         secondary_keywords,
                         extensions,
                         ml_prediction,
+                        org,
+                        repo,
                     )
                 except Exception as e:
                     logger.error(f"Process Error: {e}")
@@ -818,6 +833,8 @@ def arg_parser():
     returns: extensions - list
     returns: ml_prediction - Boolean - Default - False
     returns: unmask_secret - Boolean - Default - False
+    returns: org - list
+    returns: repo - list
     returns: log_level - int - Default - 20  - INFO
     returns: console_logging - Boolean - Default - True
     """
@@ -880,6 +897,26 @@ def arg_parser():
     )
 
     argparser.add_argument(
+        "-o",
+        "--org",
+        metavar="Owner",
+        action="store",
+        type=str,
+        default="",
+        help="Pass the Org name list as comma separated string",
+    )
+
+    argparser.add_argument(
+        "-r",
+        "--repo",
+        metavar="Repo",
+        action="store",
+        type=str,
+        default="",
+        help="Pass the Repo name list as comma separated string",
+    )
+
+    argparser.add_argument(
         "-l",
         "--log_level",
         metavar="Logger Level",
@@ -926,6 +963,19 @@ def arg_parser():
     else:
         unmask_secret = False
 
+    if args.org:
+        org = args.org.split(",")
+    else:
+        org = []
+
+    if args.repo:
+        if len(org) <= 0:
+            repo = args.repo.split(",")
+        else:
+            repo = []
+    else:
+        repo = []
+
     if args.log_level in log_level_choices:
         log_level = args.log_level
     else:
@@ -941,6 +991,8 @@ def arg_parser():
         extensions,
         ml_prediction,
         unmask_secret,
+        org,
+        repo,
         log_level,
         console_logging,
     )
@@ -954,6 +1006,8 @@ if __name__ == "__main__":
         extensions,
         ml_prediction,
         unmask_secret,
+        org,
+        repo,
         log_level,
         console_logging,
     ) = arg_parser()
@@ -970,7 +1024,7 @@ if __name__ == "__main__":
         configs.xgg_configs["github"]["throttle_time"],
     )
 
-    logger.info("xGitGuard Credentials Detection Process Started")
+    logger.info("xGitGuard Keys and Token Detection Process Started")
     if ml_prediction:
         logger.info("Running the xGitGuard detection with ML Prediction filter")
     else:
@@ -985,9 +1039,11 @@ if __name__ == "__main__":
 
     if primary_keywords:
         run_detections_from_list(
-            primary_keywords, secondary_keywords, extensions, ml_prediction
+            primary_keywords, secondary_keywords, extensions, ml_prediction, org, repo
         )
     else:
-        run_detections_from_file(secondary_keywords, extensions, ml_prediction)
+        run_detections_from_file(
+            secondary_keywords, extensions, ml_prediction, org, repo
+        )
 
     logger.info("xGitGuard Keys and Token Detection Process Completed")

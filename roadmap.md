@@ -28,7 +28,7 @@ The roadmap process is a new initiative for xGitGuard, as we begin to structure 
 | Directory scanning        | Enable scanning user specified directories for secrets                     | ⏳ WIP  | [](https://github.com/developer6) |
 | Individual file scanning  | Enable scanning user specified individual files for secrets                | ⏳ WIP  | [](https://github.com/developer7) |
 
-## ML Integration
+## ML Integration ---> https://github.com/Comcast/xGitGuard/issues/32
 
 | Feature                   | Description                                             | Status | Developer (GitHub ID) |
 |---------------------------|---------------------------------------------------------|--------|-----------------------|

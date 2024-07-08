@@ -40,9 +40,8 @@ While a feature may not be listed here, it doesn't imply automatic refusal of a 
 ### Pre-commit Hook
 | Feature                          | Description                                      | Status    | Developer (GitHub ID)        |
 |----------------------------------|--------------------------------------------------|-----------|------------------------------|
-| 🛠️ Multi-language package manager| Manage code checks and linters before commits   | 🚧 To Do  | [](https://github.com/) |
-| 🛠️ Automatic installation of linters| Install necessary tools for code review        | 🚧 To Do  | [](https://github.com/) |
-| 🛠️ Run code linters and checks    | Ensure code quality before committing changes   | 🚧 To Do  | [](https://github.com/) |
+| 🔒 Detecting secrets pre-commit| Detect secrets before committing changes   | 🚧 To Do  | [](https://github.com/) |
+
 
 ---
 

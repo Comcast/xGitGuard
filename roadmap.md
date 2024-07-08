@@ -17,16 +17,14 @@ The roadmap process is a new initiative for xGitGuard, as we begin to structure 
 |---------------------------|---------------------------------------------------------|--------|-----------------------|
 | Targeted repository scanning | Enable xGitGuard to scan user specified repositories for secrets        | ✅ Done | [preethid03](https://github.com/preethid03) |
 | Targeted organization scanning | Enable xGitGuard to scan user specified organization for secrets        | ✅ Done | [preethid03](https://github.com/preethid03) |
-| Filtering archived repositories | Exclude archived repositories from scanning          | ✅ Done | [preethid03](https://github.com/preethid03) |
-| Filtering forked repositories | Exclude forked repositories from scanning            | ✅ Done | [preethid03](https://github.com/preethid03) |
-| Custom keyword search     | Search for specific keywords within repositories       | ✅ Done | [preethid03](https://github.com/preethid03) |
 
-## File Scanner ---> https://github.com/Comcast/xGitGuard/issues/32
+## File Scanner 
 
 | Feature                   | Description                                             | Status | Developer (GitHub ID) |
 |---------------------------|---------------------------------------------------------|--------|-----------------------|
-| Directory scanning        | Enable scanning user specified directories for secrets                     | ⏳ WIP  | [](https://github.com/developer6) |
-| Individual file scanning  | Enable scanning user specified individual files for secrets                | ⏳ WIP  | [](https://github.com/developer7) |
+| Filtering archived repositories | Exclude archived repositories from scanning |   🚧 To Do | [](https://github.com/developer8) |
+| Filtering forked repositories | Exclude forked repositories from scanning            | 🚧 To Do | [](https://github.com/developer8) |
+| Custom keyword search     | Search for specific keywords within repositories       | 🚧 To Do | [](https://github.com/developer8) |
 
 ## ML Integration ---> https://github.com/Comcast/xGitGuard/issues/32
 
@@ -42,3 +40,5 @@ The roadmap process is a new initiative for xGitGuard, as we begin to structure 
 | Multi-language package manager | Manage code checks and linters before commits       |  🚧 To Do | [](https://github.com/preethid030) |
 | Automatic installation of code linters | Install necessary tools for code review             |  🚧 To Do  | [](https://github.com/preethid031) |
 | Run code linters and checks | Ensure code quality before committing changes       |  🚧 To Do  | [](https://github.com/preethid032) |
+
+

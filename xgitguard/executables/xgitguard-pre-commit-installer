@@ -1,0 +1,4 @@
+git config --global ~/gitconfig
+mkdir -p ~/gitconfig
+mkdir -p ~/gitconfig/hooks
+unzip xgitguard-precommit-hook.zip -d ~/gitconfig/hooks

@@ -78,7 +78,7 @@ from common.ml_process import entropy_calc, ml_prediction_process
 from ml_training.model import xgg_train_model
 from utilities.common_utilities import mask_data
 from utilities.file_utilities import write_to_csv_file
-from utilities.common_utilities import check_github_token_env
+from utilities.common_utilities import check_github_token_env,findLineNumber
 
 file_prefix = "xgg_"
 
@@ -224,6 +224,8 @@ def format_detection(skeyword, org_url, url, code_content, secrets, skeyword_cou
                 else:
                     # Mask the current secret
                     masked_secret = mask_data(code_line, secret)
+                linenumber=findLineNumber(code_content.split("\n"),code_line)
+                valid_secret_row.append(linenumber)
                 valid_secret_row.append(masked_secret)
 
                 valid_secret_row.append(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))

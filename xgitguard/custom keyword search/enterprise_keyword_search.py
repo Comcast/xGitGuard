@@ -115,7 +115,7 @@ def check_existing_detections(org_url_list, url_list, search_query):
             pass
     except:
         configs.read_hashed_url(
-            file_name=file_prefix + "enterprise_custom_keyword_hashed_url.csv"
+            file_name=file_prefix + "enterprise_hashed_url_custom_keywords.csv"
         )
 
     if url_list:

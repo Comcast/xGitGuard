@@ -286,14 +286,12 @@ def run_detection(public_keywords=[], org=[], repo=[]):
                 continue
         except Exception as e:
             logger.error(f"Process Error: {e}")
-        if new_results_per_query >= 0:
-            logger.info(
-                f"Total: {total_search_pairs} "
-                + f"Processed: {total_processed_search} "
-            )
     logger.info(f"Current Total Processed Search: {total_processed_search}")
     logger.info(f"Current Total Detections Write: {total_detection_writes}")
-
+    if new_results_per_query >= 0:
+        logger.info(
+            f"Total: {total_search_pairs} " + f"Processed: {total_processed_search} "
+        )
     return True
 
 

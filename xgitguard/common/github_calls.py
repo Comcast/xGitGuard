@@ -71,7 +71,7 @@ class GithubCalls:
                 )
                 sys.exit(1)
 
-        if not extension and extension == "others" or len(extension) == 0:
+        if not extension or extension == "others" or len(extension) == 0:
             response = self.__github_api_get_params(
                 search_query, org_qualifiers, repo_qualifiers
             )

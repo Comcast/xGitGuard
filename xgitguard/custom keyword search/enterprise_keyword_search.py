@@ -152,7 +152,7 @@ def process_search_results(search_response_lines, search_query):
     url_list, org_url_list = [], []
 
     hashed_urls_file = os.path.join(
-        configs.output_dir, file_prefix + "enterprise_custom_keyword_hashed_url.csv"
+        configs.output_dir, file_prefix + "enterprise_hashed_url_custom_keywords.csv"
     )
     for line in search_response_lines:
         html_url = line["html_url"]

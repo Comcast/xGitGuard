@@ -755,7 +755,7 @@ python enterprise_keyword_search.py -o org_name             #Ex: python enterpri
 python enterprise_keyword_search.py -r org_name/repo_name         #Ex: python enterprise_keyword_search.py -r test_ccs/ccs_repo_1
 ```
 
-##### Command-Line Arguments for Enterprsie keyword Scanner
+##### Command-Line Arguments for Enterprise keyword Scanner
 
 ```
 Run usage:
@@ -764,7 +764,7 @@ enterprise_keyword_search.py [-h] [-e Enterprise Keywords]  [-o org_name] [-r re
 optional arguments:
   -h, --help            show this help message and exit
   -e Enterprise Keywords, --enterprise_keywords Enterprise Keywords
-                          Pass the Enterprise Keywords list as a comma-separated string
+                          Pass the Enterprise Keywords list as a comma-separated string.This is optional argument. Keywords can also be provided in the `enterprise_keywords.csv` file located in the `configs` directory.
   -o pass org name, --org Pass the targeted org list as a comma-separated string
   -r pass repo name, --repo Pass the targeted repo list as a comma-separated string
   -l Logger Level, --log_level Logger Level
@@ -807,7 +807,7 @@ public_keyword_search.py [-h] [-p Public Keywords]  [-o org_name] [-r repo_name]
 optional arguments:
   -h, --help            show this help message and exit
   -e Public Keywords, --public_keywords Public Keywords
-                          Pass the Public Keywords list as a comma-separated string
+                          Pass the Public Keywords list as a comma-separated string.This is optional argument. Keywords can also be provided in the `public_keywords.csv` file located in the `configs` directory.
   -o pass org name, --org Pass the targeted org list as a comma-separated string
   -r pass repo name, --repo Pass the targeted repo list as a comma-separated string
   -l Logger Level, --log_level Logger Level

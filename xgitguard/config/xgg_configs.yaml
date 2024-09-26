@@ -104,3 +104,32 @@ secrets:
       "Day",
       "Hour",
     ]
+keywords:
+  public_data_columns:
+    [
+      "Source",
+      "Second_Key",
+      "URL",
+      "Owner",
+      "Repo_Name",
+      "Commit_Details",
+      "Detected_Timestamp",
+      "Year",
+      "Month",
+      "Day",
+      "Hour",
+    ]
+  enterprise_data_columns:
+    [
+      "Source",
+      "Second_Key",
+      "URL",
+      "Owner",
+      "Repo_Name",
+      "Commit_Details",
+      "Detected_Timestamp",
+      "Year",
+      "Month",
+      "Day",
+      "Hour",
+    ]

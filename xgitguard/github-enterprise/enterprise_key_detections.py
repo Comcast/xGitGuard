@@ -593,21 +593,11 @@ def run_detection(
     search_query_list = format_search_query_list(configs.secondary_keywords)
     if search_query_list:
         if ml_prediction:
-            # Train Model if not present Already
-            model_file = os.path.join(
-                configs.output_dir, "xgg_key_rf_model_object.pickle"
-            )
-            if os.path.exists(model_file):
-                logger.info(
-                    f"Detection process will use Already persisted Trained Model present in: {model_file}"
-                )
-            else:
-                logger.info(
-                    f"No persisted Trained Model present. So training and persisting a model now"
-                )
-                xgg_train_model(
-                    training_data_file="key_train.csv", model_name="xgg_key_rf_"
-                )
+            # Load BERT model and tokenizer
+            bert_model_path = "path_to_bert_model/bert_secret_detection_model"
+            tokenizer = BertTokenizer.from_pretrained(bert_model_path)
+            model = BertForSequenceClassification.from_pretrained(bert_model_path)
+            model.eval()  # Set model to evaluation mode
     else:
         logger.info(f"No Search query to process. Ending.")
         sys.exit(1)

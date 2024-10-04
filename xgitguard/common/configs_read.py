@@ -227,6 +227,86 @@ class ConfigsData:
         self.stop_words = [item for sublist in self.stop_words for item in sublist]
         # logger.debug(f"Total Stop Words: {len(self.stop_words)}")
 
+    def read_search_paths(self, file_name):
+        """
+        Read the given search paths  csv file in config path
+        Set the Class Variable for further use
+        params: file_name - string
+        """
+        logger.debug("<<<< 'Current Executing Function' >>>>")
+        # Loading secondary keywords from secondary keywords file
+        self.search_paths_file = os.path.join(self.config_dir, file_name)
+        self.search_paths = read_csv_file(
+            self.search_paths_file, output="list", header=0
+        )
+        self.search_paths = [item for sublist in self.search_paths for item in sublist]
+        # logger.debug(f"search_paths: {self.search_paths}")
+
+    def read_search_files(self, file_name):
+        """
+        Read the given search paths  csv file in config path
+        Set the Class Variable for further use
+        params: file_name - string
+        """
+        logger.debug("<<<< 'Current Executing Function' >>>>")
+        # Loading secondary keywords from secondary keywords file
+        self.search_paths_file = os.path.join(self.output_dir, file_name)
+        self.search_files = read_csv_file(
+            self.search_paths_file, output="list", header=0
+        )
+        self.search_files = [item for sublist in self.search_files for item in sublist]
+        # logger.debug(f"search_files: {self.search_files}")
+
+    def read_hashed_file(self, file_name):
+        """
+        Read the given hashed file csv file in output path
+        Set the Class Variable for further use
+        params: file_name - string
+        """
+        logger.debug("<<<< 'Current Executing Function' >>>>")
+        # Loading Existing url hash detections
+        self.hashed_file = os.path.join(self.output_dir, file_name)
+        hashed_key_files = read_csv_file(self.hashed_file, output="", header=0)
+        try:
+            self.hashed_files = (
+                hashed_key_files["hashed_files"].drop_duplicates().tolist()
+            )
+            self.hashed_file_modified_time = (
+                hashed_key_files["file_modification_hash"].drop_duplicates().tolist()
+            )
+            self.hash_file_path = hashed_key_files["files"].drop_duplicates().tolist()
+        except:
+            self.hashed_files = []
+            self.hashed_file_modified_time = []
+            self.hash_file_path = []
+        # logger.debug(f"hashed_urls: {self.hashed_urls}")
+
+    def get_filter_keywords(self):
+        """
+        Get the filter keywords to apply and check on the line of code to obtain a valid secret
+        """
+        filter_keywords = [
+            "getelementbyid",
+            "getelementbyid",
+            "gettoken",
+            "!getatt",
+            "!ref ",
+            "arn:aws:kms",
+            "kmscrossaccountkey",
+            "example",
+            "kmskeyid",
+            "JWTToken.decode",
+            "getHash",
+            "public_key",
+            "pubkeystring",
+            "deliberatelyinsecure",
+            "IsWishesWereHorsesWedAll",
+            "SOMEAPIKEYIDGUIDTHING",
+            "getconfigfilereader",
+        ]
+        filter_keywords = [i.lower() for i in filter_keywords]
+        return filter_keywords
+
 
 if __name__ == "__main__":
 

@@ -104,3 +104,23 @@ secrets:
       "Day",
       "Hour",
     ]
+  detection_columns:
+    [
+      "Source",
+      "Second_Key",
+      "Extension",
+      "URL",
+      "Secret",
+      "Code",
+      "Detected_Timestamp",
+      "Key_Weight",
+      "SKey_Count",
+      "Entropy",
+      "Dictionary_Similarity",
+      "Score",
+      "Year",
+      "Month",
+      "Day",
+      "Hour",
+    ]
+  unique_columns: ["Source", "Second_Key", "Extension", "URL", "Code"]

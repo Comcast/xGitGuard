@@ -195,3 +195,30 @@ def read_pickle_file(object_file=""):
         logger.error(f"Object File not present in : {object_file}")
         raise Exception(f"Object File not present in : {object_file}")
     return object
+
+
+def read_file_content(file_path, output="list"):
+    """
+    Read file utility
+        Read the file from the given path
+        if file is not present, exit
+    params: file_path - string
+    params: output - string - Default - list
+    returns: file_data - string or List
+    """
+    logger.debug("<<<< 'Current Executing Function' >>>>")
+    if os.path.exists(file_path):
+        logger.debug(f"Reading data from file path: {file_path}")
+        try:
+            with open(file_path, "r") as file:
+                if output == list:
+                    file_data = file.readlines()
+                else:
+                    file_data = file.read()
+            return file_data or ([] if output == "list" else "")
+        except Exception as e:
+            logger.error(f"File Read Error: {e} for file:{file_path}")
+            return [] if output == "list" else ""
+    else:
+        logger.warning(f"File not present in : {file_path}")
+        return [] if output == "list" else ""

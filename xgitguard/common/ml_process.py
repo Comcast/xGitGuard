@@ -15,10 +15,10 @@ limitations under the License.
 
 SPDX-License-Identifier: Apache-2.0
 """
+
 import logging
 import os
 import sys
-
 import numpy as np
 import pandas as pd
 from scipy.stats import entropy
@@ -28,7 +28,6 @@ parent_dir = os.path.dirname(MODULE_DIR)
 sys.path.append(parent_dir)
 
 from common.configs_read import ConfigsData
-
 from utilities.common_utilities import is_num_present, is_uppercase_present
 from utilities.file_utilities import read_pickle_file
 
@@ -54,10 +53,7 @@ def ml_prediction_process(
             [
                 "Source",
                 "Primary_Key",
-                "Commit_Details",
                 "URL",
-                "Owner",
-                "Repo_Name",
                 "Detected_Timestamp",
                 "Year",
                 "Month",
@@ -69,10 +65,7 @@ def ml_prediction_process(
         detection_data = detection_data.drop(
             [
                 "Source",
-                "Commit_Details",
                 "URL",
-                "Owner",
-                "Repo_Name",
                 "Detected_Timestamp",
                 "Year",
                 "Month",

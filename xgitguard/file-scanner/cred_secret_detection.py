@@ -19,7 +19,7 @@ from common.ml_process import entropy_calc, ml_prediction_process
 from utilities.common_utilities import mask_data
 from utilities.file_utilities import read_file_content, write_to_csv_file
 
-file_prefix = "xgg"
+file_prefix = "creds"
 total_processed_search, detection_writes_count = 0, 0
 
 
@@ -180,7 +180,10 @@ def format_detection(skeyword, org_url, code_content, secrets, skeyword_count):
                                 if (element in secret_line)
                             ]
                         )
-                        and (secret_line.find(skeyword) < secret_line.find(secret))
+                        and (
+                            secret_line.lower().find(skeyword.lower())
+                            < secret_line.find(secret)
+                        )
                     )
                     and (
                         (
@@ -195,12 +198,6 @@ def format_detection(skeyword, org_url, code_content, secrets, skeyword_count):
                     and (
                         bool(re.match("^(?=.*[0-9])(?=.*[a-zA-Z])", secret))
                         or (confidence_score[2] < 20)
-                    )
-                    and (
-                        not any(
-                            key in secret_line.lower()
-                            for key in configs.get_filter_keywords()
-                        )
                     )
                 ):
                     if len(secret_line) < 300:

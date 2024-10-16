@@ -78,7 +78,7 @@ def find_files(extensions=[], search_path=""):
                 if os.path.isfile(path):
                     write_data(path)
     except:
-        logger.debug(f"File search exception")
+        logger.error(f"File search exception")
 
 
 def setup_logger(log_level=10, console_logging=True):

@@ -281,32 +281,6 @@ class ConfigsData:
             self.hash_file_path = []
         # logger.debug(f"hashed_urls: {self.hashed_urls}")
 
-    def get_filter_keywords(self):
-        """
-        Get the filter keywords to apply and check on the line of code to obtain a valid secret
-        """
-        filter_keywords = [
-            "getelementbyid",
-            "getelementbyid",
-            "gettoken",
-            "!getatt",
-            "!ref ",
-            "arn:aws:kms",
-            "kmscrossaccountkey",
-            "example",
-            "kmskeyid",
-            "JWTToken.decode",
-            "getHash",
-            "public_key",
-            "pubkeystring",
-            "deliberatelyinsecure",
-            "IsWishesWereHorsesWedAll",
-            "SOMEAPIKEYIDGUIDTHING",
-            "getconfigfilereader",
-        ]
-        filter_keywords = [i.lower() for i in filter_keywords]
-        return filter_keywords
-
 
 if __name__ == "__main__":
 

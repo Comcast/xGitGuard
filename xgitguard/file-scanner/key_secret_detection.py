@@ -19,7 +19,7 @@ from common.ml_process import entropy_calc, ml_prediction_process
 from utilities.common_utilities import mask_data
 from utilities.file_utilities import read_file_content, write_to_csv_file
 
-file_prefix = "xgg"
+file_prefix = "keys"
 total_processed_search, detection_writes_count = 0, 0
 
 
@@ -170,7 +170,7 @@ def format_detection(skeyword, org_url, code_content, secrets, skeyword_count):
             # code_line = secret
             for secret_line in secret_lines:
                 if (
-                    (skeyword in secret_line.lower())
+                    (skeyword.lower() in secret_line.lower())
                     and (secret_line != secret)
                     and not (
                         [
@@ -179,12 +179,9 @@ def format_detection(skeyword, org_url, code_content, secrets, skeyword_count):
                             if (element in secret_line)
                         ]
                     )
-                    and (secret_line.find(skeyword) < secret_line.find(secret))
                     and (
-                        not any(
-                            key in secret_line.lower()
-                            for key in configs.get_filter_keywords()
-                        )
+                        secret_line.lower().find(skeyword.lower())
+                        < secret_line.find(secret)
                     )
                 ):
                     if len(secret_line) < 300:

@@ -34,9 +34,7 @@ from utilities.file_utilities import read_pickle_file
 logger = logging.getLogger("xgg_logger")
 
 
-def ml_prediction_process(
-    model_name, training_data, detection_data, git_env="enterprise"
-):
+def ml_prediction_process(model_name, training_data, detection_data, git_env=""):
     """
     for the given training data and detection data
         Format the detections snf training data as model needed

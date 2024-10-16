@@ -478,13 +478,11 @@ def run_search(
     search_query_list = []
     # Format  Search Query List
     search_query_list = secondary_keywords
-    logger.info(f"search query list= {search_query_list}")
     if not search_query_list:
         logger.info(f"No Search query to process. Ending.")
         sys.exit(1)
 
     keyword_list = validate_keyword(search_query_list, search_path)
-    logger.info(f"keyword_list= {keyword_list}")
 
     if len(keyword_list) > 0:
         if search_path and os.path.exists(search_path):

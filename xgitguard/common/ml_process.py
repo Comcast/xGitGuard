@@ -48,19 +48,38 @@ def ml_prediction_process(
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
     pre_prediction_data = detection_data.copy()
-    if git_env == "public":
-        detection_data = detection_data.drop(
-            [
-                "Source",
-                "Primary_Key",
-                "URL",
-                "Detected_Timestamp",
-                "Year",
-                "Month",
-                "Day",
-            ],
-            axis=1,
-        )
+    if git_env:
+        if git_env == "public":
+            detection_data = detection_data.drop(
+                [
+                    "Source",
+                    "Primary_Key",
+                    "Commit_Details",
+                    "URL",
+                    "Owner",
+                    "Repo_Name",
+                    "Detected_Timestamp",
+                    "Year",
+                    "Month",
+                    "Day",
+                ],
+                axis=1,
+            )
+        else:
+            detection_data = detection_data.drop(
+                [
+                    "Source",
+                    "Commit_Details",
+                    "URL",
+                    "Owner",
+                    "Repo_Name",
+                    "Detected_Timestamp",
+                    "Year",
+                    "Month",
+                    "Day",
+                ],
+                axis=1,
+            )
     else:
         detection_data = detection_data.drop(
             [

@@ -351,12 +351,16 @@ def run_detection(
                 # logger.debug(f"secrets_detected: {secrets_detected}")
                 secrets_detected_df = pd.DataFrame(
                     secrets_detected,
-                    columns=configs.xgg_configs["secrets"]["detection_columns"],
+                    columns=configs.xgg_configs["secrets"][
+                        "local_file_scan_detection_columns"
+                    ],
                 )
             except Exception as e:
                 logger.error(f"secrets_detected Dataframe creation failed. Error: {e}")
                 secrets_detected_df = pd.DataFrame(
-                    columns=configs.xgg_configs["secrets"]["detection_columns"],
+                    columns=configs.xgg_configs["secrets"][
+                        "local_file_scan_detection_columns"
+                    ],
                 )
             if not secrets_detected_df.empty:
                 if ml_prediction == True:

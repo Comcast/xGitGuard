@@ -104,7 +104,7 @@ secrets:
       "Day",
       "Hour",
     ]
-  detection_columns:
+  local_file_scan_detection_columns:
     [
       "Source",
       "Second_Key",

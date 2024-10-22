@@ -38,7 +38,7 @@ def write_data(data):
         else:
             with open(detected_file, "w") as f:
                 writer = csv.writer(f)
-                writer.writerow(["file_path"])
+                writer.writerow(["target_file_paths"])
                 writer.writerow([data])
                 new_search = 1
     except Exception as e:

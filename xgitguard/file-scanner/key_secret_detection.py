@@ -352,10 +352,16 @@ def run_detection(
                         if configs.training_data:
                             pass
                     except:
-                        configs.read_training_data(file_name="public_key_train.csv")
+                        configs.read_training_data(
+                            file_name=configs.xgg_configs["model"][model_preference][
+                                "training_data_key"
+                            ]
+                        )
 
                     secrets_ml_predicted = ml_prediction_process(
-                        model_name="public_xgg_key_rf_model_object.pickle",
+                        model_name=configs.xgg_configs["model"][model_preference][
+                            "model_key_file"
+                        ],
                         training_data=configs.training_data,
                         detection_data=secrets_detected_df,
                     )
@@ -541,12 +547,21 @@ def arg_parser():
     returns: secondary_keywords - list
     returns: ML Prediction - Boolean - Default - True
     returns: file_path - string
+    returns: model_preference - string - Default - public
     returns: log_level - int - Default - 20  - INFO
     returns: console_logging - Boolean - Default - True
     """
 
     argparser = argparse.ArgumentParser()
     flag_choices = ["Y", "y", "Yes", "YES", "yes", "N", "n", "No", "NO", "no"]
+    model_choices = [
+        "public",
+        "enterprise",
+        "PUBLIC",
+        "ENTERPRISE",
+        "Public",
+        "Enterprise",
+    ]
     log_level_choices = [10, 20, 30, 40, 50]
     global file_prefix
 
@@ -579,6 +594,17 @@ def arg_parser():
         type=str,
         default="",
         help="Pass the file Path for scanner",
+    )
+
+    argparser.add_argument(
+        "-mp",
+        "--model_preference",
+        metavar="Model Preference",
+        action="store",
+        type=str,
+        default="public",
+        choices=model_choices,
+        help="Please pass the model preference as 'public' or 'enterprise'. Default is public",
     )
 
     argparser.add_argument(
@@ -621,6 +647,11 @@ def arg_parser():
     else:
         search_path = ""
 
+    if args.model_preference in model_choices:
+        model_preference = args.model_preference.lower()
+    else:
+        model_preference = "public"
+
     if args.log_level in log_level_choices:
         log_level = args.log_level
     else:
@@ -635,6 +666,7 @@ def arg_parser():
         secondary_keywords,
         ml_prediction,
         search_path,
+        model_preference,
         log_level,
         console_logging,
     )
@@ -646,6 +678,7 @@ if __name__ == "__main__":
         secondary_keywords,
         ml_prediction,
         search_path,
+        model_preference,
         log_level,
         console_logging,
     ) = arg_parser()

@@ -540,7 +540,7 @@ def format_search_query_list(secondary_keywords):
 
 
 def run_detection(
-    secondary_keywords=[], extensions=[], ml_prediction=False, org=[], repo=[]
+    secondary_keywords=[], extensions=[], ml_prediction=False, org=[], repo=[], search_archived = True, search_forked = True
 ):
     """
     Run GitHub detections
@@ -646,7 +646,7 @@ def run_detection(
                 # Search GitHub and return search response confidence_score
                 total_processed_search += 1
                 search_response_lines = githubCalls.run_github_search(
-                    search_query, extension, org, repo
+                    search_query, extension, org, repo, search_archived, search_forked
                 )
                 # If search has detections, process the result urls else continue next search
                 if search_response_lines:
@@ -932,6 +932,6 @@ if __name__ == "__main__":
         )
         sys.exit(1)
 
-    run_detection(secondary_keywords, extensions, ml_prediction, org, repo)
+    run_detection(secondary_keywords, extensions, ml_prediction, org, repo, search_archived, search_forked)
 
     logger.info("xGitGuard Credentials Detection Process Completed")

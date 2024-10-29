@@ -544,6 +544,8 @@ def run_detection(
     ml_prediction=False,
     org=[],
     repo=[],
+    search_archived = True,
+    search_forked = True
 ):
     """
     Run GitHub detections
@@ -661,7 +663,7 @@ def run_detection(
                 # Search GitHub and return search response confidence_score
                 total_processed_search += 1
                 search_response_lines = githubCalls.run_github_search(
-                    search_query, extension, org, repo
+                    search_query, extension, org, repo, search_archived, search_forked
                 )
 
                 # If search has detections, process the result urls else continue next search
@@ -705,7 +707,7 @@ def run_detection(
 
 
 def run_detections_from_file(
-    secondary_keywords=[], extensions=[], ml_prediction=False, org=[], repo=[]
+    secondary_keywords=[], extensions=[], ml_prediction=False, org=[], repo=[], search_archived = True, search_forked = True
 ):
     """
     Run detection for Primary Keywords present in the default config file
@@ -737,6 +739,8 @@ def run_detections_from_file(
                         ml_prediction,
                         org,
                         repo,
+                        search_archived,
+                        search_forked
                     )
                     status = True
                 except Exception as e:
@@ -767,6 +771,8 @@ def run_detections_from_list(
     ml_prediction=False,
     org=[],
     repo=[],
+    search_archived = True,
+    search_forked = True
 ):
     """
     Run detection for Primary Keywords present in the given input list
@@ -815,6 +821,8 @@ def run_detections_from_list(
                         ml_prediction,
                         org,
                         repo,
+                        search_archived,
+                        search_forked
                     )
                 except Exception as e:
                     logger.error(f"Process Error: {e}")
@@ -1105,11 +1113,11 @@ if __name__ == "__main__":
 
     if primary_keywords:
         run_detections_from_list(
-            primary_keywords, secondary_keywords, extensions, ml_prediction, org, repo
+            primary_keywords, secondary_keywords, extensions, ml_prediction, org, repo, search_archived, search_forked
         )
     else:
         run_detections_from_file(
-            secondary_keywords, extensions, ml_prediction, org, repo
+            secondary_keywords, extensions, ml_prediction, org, repo, search_archived, search_forked
         )
 
     logger.info("xGitGuard Credentials Detection Process Completed")

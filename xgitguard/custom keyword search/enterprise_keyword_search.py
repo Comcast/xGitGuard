@@ -239,7 +239,7 @@ def format_search_query_list(secondary_keywords):
     return search_query_list
 
 
-def run_detection(enterprise_keywords=[], org=[], repo=[]):
+def run_detection(enterprise_keywords=[], org=[], repo=[], search_archived = True, search_forked = True):
     """
     Run GitHub search
     If a Enterprise keyword is provided, perform the search using the Enterprise keyword.
@@ -286,6 +286,8 @@ def run_detection(enterprise_keywords=[], org=[], repo=[]):
                 "",
                 org,
                 repo,
+                search_archived,
+                search_forked
             )
             # If search has detections, process the result urls else continue next search
             if search_response_lines:
@@ -506,5 +508,5 @@ if __name__ == "__main__":
         )
         sys.exit(1)
 
-    run_detection(enterprise_keywords, org, repo)
+    run_detection(enterprise_keywords, org, repo, search_archived, search_forked)
     logger.info("xGitGuard Custom keyword search Process  Completed")

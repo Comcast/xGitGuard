@@ -221,7 +221,7 @@ def process_search_results(search_response_lines, search_query):
     return detection_writes_per_query, new_results_per_query, detections_per_query
 
 
-def run_detection(public_keywords=[], org=[], repo=[]):
+def run_detection(public_keywords=[], org=[], repo=[], search_archived = True, search_forked = True):
     """
     Run GitHub search
     If a primary keyword is provided, perform the search using the primary keyword.
@@ -264,6 +264,8 @@ def run_detection(public_keywords=[], org=[], repo=[]):
                 "",
                 org,
                 repo,
+                search_archived,
+                search_forked
             )
             # If search has detections, process the result urls else continue next search
             if search_response_lines:
@@ -468,5 +470,5 @@ if __name__ == "__main__":
             f"GitHub API Token Environment variable '{token_var}' not set. API Search will fail/return no results. Please Setup and retry"
         )
         sys.exit(1)
-    run_detection(public_keywords, org, repo)
+    run_detection(public_keywords, org, repo, search_archived, search_forked)
     logger.info("xGitGuard custom keyword search Process  Completed")

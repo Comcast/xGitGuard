@@ -13,13 +13,18 @@ parent_dir = os.path.dirname(MODULE_DIR)
 sys.path.insert(0, parent_dir)
 
 from common.configs_read import ConfigsData
-from common.data_format import keys_extractor, remove_url_from_keys
+from common.data_format import (
+    keys_extractor,
+    remove_url_from_keys,
+    remove_url_from_creds,
+    credential_extractor,
+)
 from common.logger import create_logger
 from common.ml_process import entropy_calc, ml_prediction_process
 from utilities.common_utilities import mask_data
 from utilities.file_utilities import read_file_content, write_to_csv_file
 
-file_prefix = "keys"
+file_prefix = "xgg_file_scan"
 total_processed_search, detection_writes_count = 0, 0
 
 
@@ -130,7 +135,58 @@ def calculate_confidence(secondary_keyword, extension, secret):
     return [sum([secondary_keyword_value, extension_value]), entro, d_match[0]]
 
 
-def format_detection(skeyword, org_url, code_content, secrets, skeyword_count):
+def validate_secret_line(
+    secret_line, secret, keyword, confidence_score, is_secondary_credential
+):
+    """
+    Validates a line of code to determine if it contains a secret.
+
+    Args:
+        secret_line (str): The line of text to validate.
+        secret (str): The secret string to search for within the line.
+        keyword (str): The search query used to identify potential secrets.
+        confidence_score (float): The confidence score indicating the likelihood that the secret is valid.
+        is_secondary_credential (bool): A flag indicating whether the secret is a secondary credential.
+
+    Returns:
+        bool: True if the line is validated as containing the secret, False otherwise.
+    """
+    is_valid = (
+        (keyword in secret_line.lower())
+        and (secret_line != secret)
+        and not ([ele for ele in ["http", "www", "uuid"] if (ele in secret_line)])
+        and (secret_line.find(keyword) < secret_line.find(secret))
+    )
+    if is_secondary_credential:
+        return (
+            is_valid
+            and (
+                (
+                    secret_line.find(":") < secret_line.find(secret)
+                    and secret_line.find(":") > secret_line.find(keyword)
+                )
+                or (
+                    secret_line.find("=") < secret_line.find(secret)
+                    and secret_line.find("=") > secret_line.find(keyword)
+                )
+            )
+            and (
+                bool(re.match("^(?=.*[0-9])(?=.*[a-zA-Z])", secret))
+                or (confidence_score[2] < 20)
+            )
+        )
+    else:
+        return is_valid
+
+
+def format_detection(
+    keyword,
+    org_url,
+    code_content,
+    secrets,
+    keyword_count,
+    is_secondary_credential=False,
+):
     """
     Format the secret data from the given code content and other data
         Format the secrets data in the required format
@@ -138,11 +194,12 @@ def format_detection(skeyword, org_url, code_content, secrets, skeyword_count):
         Mask the secret if present
         Return the final formatted detections
 
-    params: skeyword - string - Secondary Keyword
+    params: keyword - string - Secondary Keyword
     params: org_url - string - File Path
     params: code_content - list - User code content
     params: secrets - list - Detected secrets list
-    params: skeyword_count - int - secondary keyword count
+    params: keyword_count- int - secondary keyword count
+    params: is_secondary_credential - bool- Flag to check whether secret is secondary credential
     returns: secrets_data_list - list - List of formatted detections
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
@@ -153,12 +210,15 @@ def format_detection(skeyword, org_url, code_content, secrets, skeyword_count):
 
     secret_data.insert(0, org_url)
     secret_data.insert(0, extension)
-    secret_data.insert(0, skeyword)
-    secret_data.insert(0, "xGG_Key_Token")
+    secret_data.insert(0, keyword)
+    if is_secondary_credential:
+        secret_data.insert(0, "xGG_Detected_Credential")
+    else:
+        secret_data.insert(0, "xGG_Detected_Key")
     # logger.debug("<<<< 'Current Executing Function calculate_confidence loop' >>>>")
     for secret in secrets:
         # Calculate confidence values for detected secrets
-        confidence_score = calculate_confidence(skeyword, extension, secret)
+        confidence_score = calculate_confidence(keyword, extension, secret)
         logger.debug("Confidence value process completed")
 
         if confidence_score[1] > 1.5:
@@ -169,20 +229,12 @@ def format_detection(skeyword, org_url, code_content, secrets, skeyword_count):
 
             # code_line = secret
             for secret_line in secret_lines:
-                if (
-                    (skeyword.lower() in secret_line.lower())
-                    and (secret_line != secret)
-                    and not (
-                        [
-                            element
-                            for element in ["http", "www", "uuid"]
-                            if (element in secret_line)
-                        ]
-                    )
-                    and (
-                        secret_line.lower().find(skeyword.lower())
-                        < secret_line.find(secret)
-                    )
+                if validate_secret_line(
+                    secret_line,
+                    secret,
+                    keyword,
+                    confidence_score,
+                    is_secondary_credential,
                 ):
                     if len(secret_line) < 300:
                         valid_secret_row = [value for value in secret_data]
@@ -198,9 +250,7 @@ def format_detection(skeyword, org_url, code_content, secrets, skeyword_count):
                             datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         )
                         valid_secret_row.append(confidence_score[0])
-                        count_score = math.log2(50) / (
-                            math.log2(skeyword_count + 1) + 1
-                        )
+                        count_score = math.log2(50) / (math.log2(keyword_count + 1) + 1)
                         valid_secret_row.append(count_score)
                         valid_secret_row.append(confidence_score[1])
                         d_match = math.log2(100) / (
@@ -226,7 +276,12 @@ def format_detection(skeyword, org_url, code_content, secrets, skeyword_count):
 
 
 def process_file_content(
-    file_path, code_content, secondary_keyword, extension, secrets_data=[]
+    file_path,
+    code_content,
+    keyword,
+    extension,
+    secrets_data=[],
+    is_secondary_credential=False,
 ):
     """
     Process the Search
@@ -237,27 +292,33 @@ def process_file_content(
 
     params: file_path - string
     params: code_content - string
-    params: secondary_keyword - string
+    params: keyword - string
     params: extension - string
     params: secrets_data - list
+    params: is_secondary_credential - bool
     returns: secrets_data_list - list - Detected secrets data
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
     # Processes search findings
-    file_path = file_path
-    code_content = code_content
-    skeyword = secondary_keyword
-    extension = extension
+    # file_path = file_path
+    # code_content = code_content
+    # skeyword = keyword
+    # extension = extension
     secrets_data_list = []
     lines = code_content.split("\n")
     if lines:
-        skeyword_count = code_content.lower().count(skeyword.lower())
+        keyword_count = code_content.lower().count(keyword.lower())
 
         if len(secrets_data) >= 1 and len(secrets_data) <= 100:
             if len(secrets_data) >= 40:
                 secrets_data = secrets_data[:40]
             secret_data_list = format_detection(
-                skeyword, file_path, code_content, secrets_data, skeyword_count
+                keyword,
+                file_path,
+                code_content,
+                secrets_data,
+                keyword_count,
+                is_secondary_credential,
             )
             if secret_data_list:
                 for secret_data in secret_data_list:
@@ -277,10 +338,11 @@ def process_file_content(
 def run_detection(
     file_path,
     secondary_keyword,
+    secondary_credentials,
+    keyword,
     extension,
     ml_prediction=True,
     code_content="",
-    secrets_data=[],
 ):
     """
     Run search with Secondary Keyword and extension combination in the given file
@@ -311,8 +373,8 @@ def run_detection(
 
     global detection_writes_count
 
-    if not secondary_keyword:
-        logger.error(f"Please pass secondary_keyword like 'password'")
+    if not secondary_keyword and not secondary_credentials:
+        logger.error(f"Please pass secondary_keyword or credentials like 'password'")
         sys.exit(1)
 
     if not extension:
@@ -323,9 +385,36 @@ def run_detection(
         logger.debug(
             f"Processing Scan on secondary_keyword: '{secondary_keyword}' extension: '{extension}' file: '{file_path}'"
         )
+        is_secondary_credential = None
+        if keyword in secondary_credentials:
+            is_secondary_credential = True
+        else:
+            is_secondary_credential = False
+
+        if is_secondary_credential:
+            code_contents = remove_url_from_creds(code_content, [])
+        else:
+            code_contents = remove_url_from_keys(code_content)
+
+        secrets_data = []
+        if code_contents:
+            if is_secondary_credential:
+                try:
+                    if configs.stop_words:
+                        pass
+                except:
+                    configs.read_stop_words(file_name="stop_words.csv")
+                secrets_data = credential_extractor(code_contents, configs.stop_words)
+            else:
+                secrets_data = keys_extractor(code_contents)
 
         secrets_detected = process_file_content(
-            file_path, code_content, secondary_keyword, extension, secrets_data
+            file_path,
+            code_content,
+            keyword,
+            extension,
+            secrets_data,
+            is_secondary_credential,
         )
 
         if secrets_detected:
@@ -352,16 +441,20 @@ def run_detection(
                         if configs.training_data:
                             pass
                     except:
-                        configs.read_training_data(
-                            file_name=configs.xgg_configs["model"][model_preference][
-                                "training_data_key"
-                            ]
+                        train_data = (
+                            f"{configs.xgg_configs['model'][model_preference]['training_data_cred']}"
+                            if is_secondary_credential
+                            else f"{configs.xgg_configs['model'][model_preference]['training_data_key']}"
                         )
+                        configs.read_training_data(file_name=train_data)
 
+                    model_file_name = (
+                        f"{configs.xgg_configs['model'][model_preference]['model_cred_file']}"
+                        if is_secondary_credential
+                        else f"{configs.xgg_configs['model'][model_preference]['model_key_file']}"
+                    )
                     secrets_ml_predicted = ml_prediction_process(
-                        model_name=configs.xgg_configs["model"][model_preference][
-                            "model_key_file"
-                        ],
+                        model_name=model_file_name,
                         training_data=configs.training_data,
                         detection_data=secrets_detected_df,
                     )
@@ -379,7 +472,7 @@ def run_detection(
                         try:
                             secrets_detected_file = os.path.join(
                                 configs.output_dir,
-                                "xgg_ml_keys_detected.csv",
+                                "xgg_file_scan_ml_secrets_detected.csv",
                             )
                             write_to_csv_file(
                                 secrets_ml_predicted, secrets_detected_file
@@ -401,7 +494,7 @@ def run_detection(
                         try:
                             secrets_detected_file = os.path.join(
                                 configs.output_dir,
-                                "xgg_keys_detected.csv",
+                                "xgg_file_scan_secrets_detected.csv",
                             )
                             write_to_csv_file(
                                 secrets_detected_df, secrets_detected_file
@@ -444,13 +537,18 @@ def validate_keyword(search_query_list, file_path):
 
 
 def run_search(
-    secondary_keywords=[], extensions="", search_path="", ml_prediction=True
+    secondary_keywords=[],
+    secondary_credentials=[],
+    extensions="",
+    search_path="",
+    ml_prediction=True,
 ):
     """
-    Run Search  for given  directory or file using secondary keywords & extensions
+    Run Search  for given  directory or file using secondary keywords,secondary credentials & extensions
     and process return file path where this keywords present for prediction.
 
     params: secondary_keywords - list - secondary_keywords
+    params: secondary_credentials - list - secondary_credentials
     params: extensions - string - extensions
     params: search_path - String - file/Directory path string
     params: ml_prediction - String - ML Prediction Flag
@@ -470,7 +568,7 @@ def run_search(
     else:
         try:
             hashed_path_file = os.path.join(
-                configs.output_dir, file_prefix + "_xgg_hashed_file.csv"
+                configs.output_dir, file_prefix + "_hashed_file.csv"
             )
             new_hashed_files_df = pd.DataFrame(
                 new_hashed_files,
@@ -487,7 +585,11 @@ def run_search(
 
     search_query_list = []
     # Format  Search Query List
-    search_query_list = secondary_keywords
+    if secondary_keywords:
+        search_query_list.extend(secondary_keywords)
+    if secondary_credentials:
+        search_query_list.extend(secondary_credentials)
+
     if not search_query_list:
         logger.info(f"No Search query to process. Ending.")
         sys.exit(1)
@@ -503,24 +605,17 @@ def run_search(
             logger.warning(f"Given file path: '{search_path}' is not valid/present")
             return False
 
-        secrets_data = []
-        code_contents = remove_url_from_keys(code_content)
-        if code_contents:
-            secrets_data = keys_extractor(code_contents)
-
-        if secrets_data:
-            # Loop over each search query
-            for search_query in keyword_list:
-                total_processed_search = total_processed_search + 1
+        for keyword in keyword_list:
+            if code_content:
                 run_detection(
                     search_path,
-                    search_query,
+                    secondary_keywords,
+                    secondary_credentials,
+                    keyword,
                     extensions,
                     ml_prediction,
                     code_content,
-                    secrets_data,
                 )
-
     return True
 
 
@@ -566,7 +661,7 @@ def arg_parser():
     global file_prefix
 
     argparser.add_argument(
-        "-s",
+        "-keys",
         "--secondary_keywords",
         metavar="Secondary Keywords",
         action="store",
@@ -574,7 +669,15 @@ def arg_parser():
         default="",
         help="Pass the Secondary Keywords list as comma separated string",
     )
-
+    argparser.add_argument(
+        "-creds",
+        "--secondary_credentials",
+        metavar="Secondary credentials",
+        action="store",
+        type=str,
+        default="",
+        help="Pass the Secondary Credentials list as comma separated string",
+    )
     argparser.add_argument(
         "-m",
         "--ml_prediction",
@@ -636,9 +739,14 @@ def arg_parser():
     else:
         secondary_keywords = []
 
+    if args.secondary_credentials:
+        secondary_credentials = args.secondary_credentials.split(",")
+    else:
+        secondary_credentials = []
+
     if args.ml_prediction.lower() in flag_choices[:5]:
         ml_prediction = True
-        file_prefix = "keys_ml"
+        file_prefix += "_ml"
     else:
         ml_prediction = False
 
@@ -664,6 +772,7 @@ def arg_parser():
 
     return (
         secondary_keywords,
+        secondary_credentials,
         ml_prediction,
         search_path,
         model_preference,
@@ -676,6 +785,7 @@ if __name__ == "__main__":
     # Argument Parsing
     (
         secondary_keywords,
+        secondary_credentials,
         ml_prediction,
         search_path,
         model_preference,
@@ -704,9 +814,23 @@ if __name__ == "__main__":
     else:
         configs.read_secondary_keywords(file_name="secondary_keys.csv")
 
+    if secondary_credentials:
+        if isinstance(secondary_credentials, list):
+            configs.secondary_credentials = secondary_credentials
+        else:
+            logger.error(
+                f"Please pass secondary credentials in List like '['password',]'"
+            )
+            sys.exit(1)
+    else:
+        configs.read_secondary_credentials(file_name="secondary_creds.csv")
+
     logger.info(f"Total Secondary Keywords: {len(configs.secondary_keywords)}")
+    logger.info(f"Total Secondary Credentials: {len(configs.secondary_credentials)}")
 
     secondary_keywords = configs.secondary_keywords
+    secondary_credentials = configs.secondary_credentials
+
     if search_path:
         if os.path.isfile(search_path):
             try:
@@ -718,11 +842,20 @@ if __name__ == "__main__":
                 if extensions not in configs.extensions:
                     logger.debug(f"File path extension not valid {search_path}")
                     sys.exit(1)
-                total_search_pairs = len(configs.secondary_keywords) * len(
-                    search_path.split(",")
-                )
+                total_search_pairs = (
+                    (
+                        len(configs.secondary_credentials)
+                        + len(configs.secondary_keywords)
+                    )
+                ) * len(search_path.split(","))
                 logger.info(f"Total Search Pairs: {total_search_pairs}")
-                run_search(secondary_keywords, extensions, search_path, ml_prediction)
+                run_search(
+                    secondary_keywords,
+                    secondary_credentials,
+                    extensions,
+                    search_path,
+                    ml_prediction,
+                )
             except:
                 raise ValueError(
                     f"File path has Error in config file for path {search_path}"
@@ -730,7 +863,9 @@ if __name__ == "__main__":
     else:
         configs.read_search_files(file_name="xgg_search_files.csv")
         search_paths = configs.search_files
-        total_search_pairs = len(configs.secondary_keywords) * len(search_paths)
+        total_search_pairs = (
+            (len(configs.secondary_keywords) + len(configs.secondary_credentials))
+        ) * len(search_paths)
         logger.info(f"Total Search Pairs: {total_search_pairs}")
         if search_paths:
             for search_path in search_paths:
@@ -746,12 +881,17 @@ if __name__ == "__main__":
                             logger.debug(f"File path extension not valid {search_path}")
                             continue
                         run_search(
-                            secondary_keywords, extensions, search_path, ml_prediction
+                            secondary_keywords,
+                            secondary_credentials,
+                            extensions,
+                            search_path,
+                            ml_prediction,
                         )
                     except:
                         if search_path.endswith(".gitignore"):
                             run_search(
                                 secondary_keywords,
+                                secondary_credentials,
                                 ".gitignore",
                                 search_path,
                                 ml_prediction,

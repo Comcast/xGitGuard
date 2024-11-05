@@ -102,6 +102,23 @@ class ConfigsData:
         ]
         # logger.debug(f"secondary_keywords: {self.secondary_keywords}")
 
+    def read_secondary_credentials(self, file_name):
+        """
+        Read the given secondary keywords csv file in config path
+        Set the Class Variable for further use
+        params: file_name - string
+        """
+        logger.debug("<<<< 'Current Executing Function' >>>>")
+        # Loading secondary keywords from secondary keywords file
+        self.secondary_credentials_file = os.path.join(self.config_dir, file_name)
+        self.secondary_credentials = read_csv_file(
+            self.secondary_credentials_file, output="list", header=0
+        )
+        self.secondary_credentials = [
+            item for sublist in self.secondary_credentials for item in sublist
+        ]
+        # logger.debug(f"secondary_credentials: {self.secondary_credentials}")
+
     def read_extensions(self, file_name="extensions.csv"):
         """
         Read the given extensions csv file in config path

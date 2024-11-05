@@ -22,6 +22,7 @@ Designed and Developed by Comcast Cybersecurity Research and Development Team</p
 - [Usage](#usage)
   - [Enterprise Github Secrets Detection](#enterprise-github-secrets-detection)
   - [Public Github Secrets Detection](#public-github-secrets-detection)
+  - [FileScan](#filescan)
   - [ML Model Training](#ml-model-training)
 - [License](#license)
 
@@ -78,7 +79,7 @@ Designed and Developed by Comcast Cybersecurity Research and Development Team</p
   ```
   pip list --outdated
   ```
-  
+
 ## Search Patterns
 
 - There are two ways to define configurations in xGitGuard
@@ -120,7 +121,6 @@ Designed and Developed by Comcast Cybersecurity Research and Development Team</p
   - enterprise_commits_url: `https://github.<<`**`Enterprise_Name`**`>>.com/api/v3/repos/{user_name}/{repo_name}/commits?path={file_path}`
 
 #### Running Enterprise Secret Detection
-
 
 - Traverse into the `github-enterprise` script folder
 
@@ -233,7 +233,6 @@ python enterprise_key_detections.py -o org_name        #Ex: python enterprise_ke
 python enterprise_key_detections.py -r org_name/repo_name     #Ex: python enterprise_key_detections.py -r test_org/public_docker
 ```
 
-
 ##### Detections With ML Filter
 
 xGitGuard also has an additional ML filter where users can collect their organization/targeted data and train their model. Having this ML filter helps in reducing the false positives from the detection.
@@ -323,9 +322,9 @@ optional arguments:
 #### Running Public Credential Secrets Detection
 
 - Traverse into the `github-public` script folder
-    ```
-    cd github-public
-    ```
+  ```
+  cd github-public
+  ```
 
 > **Note:** User needs to remove the sample content from primary_keywords.csv and add primary keywords like targeted domain names to be searched in public GitHub.
 
@@ -516,6 +515,128 @@ Pass the Console Logging as Yes or No. Default is Yes
 
 > **Note:** By Default, the detected secrets will be masked to hide sensitive data. If needed, user can skip the masking to write raw secret using command line argument `-u Yes or --unmask_secret Yes`. Refer command line options for more details.
 
+Enterprise ML Model Training Procedure
+
+### FileScan
+
+**Detecting Exposed Secrets on File System at Scale**
+
+- xGitGuard Filescanner detects secrets, such as keys and credentials, exposed on the filesystem.
+- Traverse into the `file-scanner` folder
+
+  ```
+  cd file-scanner
+  ```
+
+#### Running Extension Filter
+
+By default, the extension Search script runs for configured directories/files under config/xgg_search_paths.csv & config/extesnions.csv,
+
+```
+# Run with Default configs
+python xgg_extension_search.py
+```
+
+To run with specific directories or file path,
+
+```
+# Run with targetted directories/filepaths for all extensions
+python extension_search.py  -p "file-path"
+```
+
+To run with specific extensions & directories/filepaths,
+
+```
+# Run with targetted filepaths/directories for specific extensions
+python xgg_extension_search.py  -p "file-path" -e "py,txt"
+```
+
+> **Note:** By default extensions are picked from extensions.csv config file.But user can also search for targeted extensions either by proving in CLI option/updating extensions.csv
+
+##### Command-Line Arguments
+
+```
+Run usage:
+xgg_extension_search.py [-h] [-e Extensions] [-p Directory/Path] [-l Logger Level] [-c Console Logging]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -e Extensions, --extensions Extensions
+                          Pass the Extensions list as a comma-separated string
+  -p Search Path, --search_path Search Path/File
+                          Pass the Directory or file to be searched
+  -l Logger Level, --log_level Logger Level
+                          Pass the Logging level as for CRITICAL - 50, ERROR - 40 WARNING - 30 INFO - 20 DEBUG - 10. Default is 20
+  -c Console Logging, --console_logging Console Logging
+                          Pass the Console Logging as Yes or No. Default is Yes
+```
+
+#### Search Output Format:
+
+##### Output Files
+
+```
+  1. Paths Detected: xgitguard\output\xgg_search_files.csv
+```
+
+#### Secrets Detection
+
+By default, the Secrets Detection script runs for given processed search paths(output/xgg_search_files.csv) with ML Filter detecting both keys and credentials.xGitGuard has an additional ML filter to reduce the false positives from the detection.
+
+```
+# Run with Default configs
+python secret_detection.py
+```
+
+##### Command to Run Scanner without ML Filter
+
+```
+# Run for given Searched Paths without ML model,
+python secret_detection.py -m No
+```
+
+##### Command-Line Arguments for Secret Scanner
+
+```
+Run usage:
+secret_detection.py [-h help] [-keys Secondary Keywords] [-creds Secondary Credentials] [-m Ml Prediction ] [-f File Path] [-model_pref model_preference] [-l Logger Level] [-c Console Logging]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -keys Secondary Keywords, --secondary_keywords Secondary Keywords
+                          Pass the Secondary Keyword as string
+  -creds Secondary Credentials, --secondary_Credentials
+                          Pass the Secondary Credentials as string
+  -m ML Prediction, --ml_prediction ML Prediction
+                          Pass the ML Filter as Yes or No. Default is Yes
+  -F File Path, --File_path Scan path of the  File
+                          Pass the file to be scanned
+  -model_preference, --model_preference
+                      Specify whether to use the public model or the enterprise model.Default is public
+  -l Logger Level, --log_level Logger Level
+                          Pass the Logging level as for CRITICAL - 50, ERROR - 40 WARNING - 30 INFO - 20 DEBUG - 10. Default is 20
+  -c Console Logging, --console_logging Console Logging
+                          Pass the Console Logging as Yes or No. Default is Yes
+```
+
+- Inputs used for search and scan
+
+  > **Note:** Command-line argument keywords have precedence over config files (Default). If no keywords are passed in cli, data from config files will be used for the search.
+
+  > **Note:** If ML Prediction flag is set to false the -model_preference flag is not required.
+
+  - xgg_search_files.csv file has a default list of file paths for search based on extension scan, which can be updated by users based on their requirement.
+
+#### Output Format:
+
+##### Output Files
+
+```
+  1. Secrets Detected: xgitguard\output\xgg_file_scan_*_secrets_detected.csv
+  2. Log File: xgitguard\logs\xgg_file_scan_*_secret_detection*yyyymmdd_hhmmss*.log
+  3. Hash File: xgitguard\output\xgg_file_scan_*_hashed_file.csv
+```
+
 #### ML Model Training
 
 #### Enterprise ML Model Training Procedure
@@ -523,8 +644,6 @@ Pass the Console Logging as Yes or No. Default is Yes
 To use ML Feature, ML training is mandatory. It includes data collection, feature engineering & model persisting.
 
 > **Note:** Labelling the collected secret is an important process to improve the ML prediction.
-
-
 
 - Traverse into the "ml_training" folder
 
@@ -619,7 +738,6 @@ Traverse into the "ml_training" folder
 To use ML Feature, ML training is mandatory. It includes data collection, feature engineering & model persisting.
 
 > **Note:** Labelling the collected secret is an important process to use the ML effectively.
-
 
 - Traverse into the "models" folder
 

@@ -251,7 +251,7 @@ class ConfigsData:
         params: file_name - string
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
-        # Loading secondary keywords from secondary keywords file
+        # Loading the search paths file to retrieve the paths that need the extension filter applied
         self.search_paths_file = os.path.join(self.config_dir, file_name)
         self.search_paths = read_csv_file(
             self.search_paths_file, output="list", header=0
@@ -266,10 +266,10 @@ class ConfigsData:
         params: file_name - string
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
-        # Loading secondary keywords from secondary keywords file
-        self.search_paths_file = os.path.join(self.output_dir, file_name)
+        # Reading the paths of files to be searched after applying the extension filter
+        self.target_paths_file = os.path.join(self.output_dir, file_name)
         self.search_files = read_csv_file(
-            self.search_paths_file, output="list", header=0
+            self.target_paths_file, output="list", header=0
         )
         self.search_files = [item for sublist in self.search_files for item in sublist]
         # logger.debug(f"search_files: {self.search_files}")

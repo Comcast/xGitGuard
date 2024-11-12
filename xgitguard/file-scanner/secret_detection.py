@@ -299,11 +299,6 @@ def process_file_content(
     returns: secrets_data_list - list - Detected secrets data
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
-    # Processes search findings
-    # file_path = file_path
-    # code_content = code_content
-    # skeyword = keyword
-    # extension = extension
     secrets_data_list = []
     lines = code_content.split("\n")
     if lines:

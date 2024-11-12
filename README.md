@@ -120,7 +120,7 @@ Designed and Developed by Comcast Cybersecurity Research and Development Team</p
   - url_validator: `https://github.<<`**`Enterprise_Name`**`>>.com/api/v3/search/code`
   - enterprise_commits_url: `https://github.<<`**`Enterprise_Name`**`>>.com/api/v3/repos/{user_name}/{repo_name}/commits?path={file_path}`
 
-#### Running Enterprise Secret Detection
+### Running Enterprise Secret Detection
 
 - Traverse into the `github-enterprise` script folder
 
@@ -514,8 +514,6 @@ Pass the Console Logging as Yes or No. Default is Yes
   ```
 
 > **Note:** By Default, the detected secrets will be masked to hide sensitive data. If needed, user can skip the masking to write raw secret using command line argument `-u Yes or --unmask_secret Yes`. Refer command line options for more details.
-
-Enterprise ML Model Training Procedure
 
 ### FileScan
 

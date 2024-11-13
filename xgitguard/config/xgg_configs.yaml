@@ -136,7 +136,7 @@ file_scanner:
       "SKey_Count",
       "Entropy",
       "Dictionary_Similarity",
-      "Score"
+      "Score",
       "Year",
       "Month",
       "Day",
@@ -173,4 +173,3 @@ keywords:
       "Day",
       "Hour",
     ]
-

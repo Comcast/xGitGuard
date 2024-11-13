@@ -24,6 +24,7 @@ Designed and Developed by Comcast Cybersecurity Research and Development Team</p
   - [Public Github Secrets Detection](#public-github-secrets-detection)
   - [FileScan](#filescan)
   - [ML Model Training](#ml-model-training)
+  - [Custom Keyword Scan](#custom-keyword-scan)
 - [License](#license)
 
 ## Overview
@@ -841,6 +842,100 @@ Traverse into the "ml_training" folder
   >
   > - If persisted model **xgitguard\output\public\_\*xgg\*.pickle** is not present in the output folder, then use feature engineered data to create a model and persist it.
   > - By default, when feature engineered data collected in Public mode not available, then model creation will be using enterprise-based engineered data.
+
+## Custom Keyword Scan
+
+- Traverse into the `custom-keyword-search` script folder
+
+  ```
+  cd custom-keyword-search
+  ```
+
+#### Running Enterprise Keyword Search
+
+#### Enterprise Custom Keyword Search Process
+
+Please add the required keywords to be searched into config/enterprise_keywords.csv
+
+```
+# Run with given configs,
+python enterprise_keyword_search.py
+```
+
+##### Command to Run Enterprise Scanner for targeted organization
+
+```
+# Run Run for targeted org,
+python enterprise_keyword_search.py -o org_name             #Ex: python enterprise_keyword_search.py -o test_ccs
+```
+
+##### Command to Run Enterprise Scanner for targeted repo
+
+```
+# Run Run for targeted repo,
+python enterprise_keyword_search.py -r org_name/repo_name         #Ex: python enterprise_keyword_search.py -r test_ccs/ccs_repo_1
+```
+
+##### Command-Line Arguments for Enterprise keyword Scanner
+
+```
+Run usage:
+enterprise_keyword_search.py [-h] [-e Enterprise Keywords]  [-o org_name] [-r repo_name] [-l Logger Level] [-c Console Logging]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -e Enterprise Keywords, --enterprise_keywords Enterprise Keywords
+                          Pass the Enterprise Keywords list as a comma-separated string.This is optional argument. Keywords can also be provided in the `enterprise_keywords.csv` file located in the `configs` directory.
+  -o pass org name, --org Pass the targeted org list as a comma-separated string
+  -r pass repo name, --repo Pass the targeted repo list as a comma-separated string
+  -l Logger Level, --log_level Logger Level
+                          Pass the Logging level as for CRITICAL - 50, ERROR - 40 WARNING - 30 INFO - 20 DEBUG - 10. Default is 20
+  -c Console Logging, --console_logging Console Logging
+                          Pass the Console Logging as Yes or No. Default is Yes
+```
+
+#### Running Public Keyword Search
+
+#### Public Custom Keyword Search Process
+
+Please add the required keywords to be searched into config/public_keywords.csv
+
+```
+# Run with given configs,
+python public_keyword_search.py
+```
+
+##### Command to Run Public Scanner for targeted organization
+
+```
+# Run Run for targeted org,
+python public_keyword_search.py -o org_name                 #Ex: python public_keyword_search.py -o test_org
+```
+
+##### Command to Run Public Scanner for targeted repo
+
+```
+# Run Run for targeted repo,
+python public_keyword_search.py -r org_name/repo_name         #Ex: python public_keyword_search.py -r test_org/public_docker
+```
+
+##### Command-Line Arguments for Public keyword Scanner
+
+```
+Run usage:
+public_keyword_search.py [-h] [-p Public Keywords]  [-o org_name] [-r repo_name] [-l Logger Level] [-c Console Logging]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -e Public Keywords, --public_keywords Public Keywords
+                          Pass the Public Keywords list as a comma-separated string.This is optional argument. Keywords can also be provided in the `public_keywords.csv` file located in the `configs` directory.
+  -o pass org name, --org Pass the targeted org list as a comma-separated string
+  -r pass repo name, --repo Pass the targeted repo list as a comma-separated string
+  -l Logger Level, --log_level Logger Level
+                          Pass the Logging level as for CRITICAL - 50, ERROR - 40 WARNING - 30 INFO - 20 DEBUG - 10. Default is 20
+  -c Console Logging, --console_logging Console Logging
+                          Pass the Console Logging as Yes or No. Default is Yes
+```
 
 ### Additional Important Notes
 

@@ -896,6 +896,6 @@ if __name__ == "__main__":
         )
         sys.exit(1)
 
-    run_detection(secondary_keywords, extensions, ml_prediction, org=[], repo=[])
+    run_detection(secondary_keywords, extensions, ml_prediction, org, repo)
 
     logger.info("xGitGuard Credentials Detection Process Completed")

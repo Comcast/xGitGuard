@@ -418,14 +418,14 @@ def run_detection(
                 # logger.debug(f"secrets_detected: {secrets_detected}")
                 secrets_detected_df = pd.DataFrame(
                     secrets_detected,
-                    columns=configs.xgg_configs["secrets"][
+                    columns=configs.xgg_configs["file_scanner"][
                         "local_file_scan_detection_columns"
                     ],
                 )
             except Exception as e:
                 logger.error(f"secrets_detected Dataframe creation failed. Error: {e}")
                 secrets_detected_df = pd.DataFrame(
-                    columns=configs.xgg_configs["secrets"][
+                    columns=configs.xgg_configs["file_scanner"][
                         "local_file_scan_detection_columns"
                     ],
                 )
@@ -459,7 +459,7 @@ def run_detection(
                             ["Secret"], axis=1
                         )
                         secrets_ml_predicted = secrets_ml_predicted.drop_duplicates(
-                            configs.xgg_configs["secrets"]["unique_columns"]
+                            configs.xgg_configs["file_scanner"]["unique_columns"]
                         )
                         logger.debug(
                             f"Current secrets_ml_predicted count: {secrets_ml_predicted.shape[0]}"
@@ -481,7 +481,7 @@ def run_detection(
                             ["Secret"], axis=1
                         )
                         secrets_detected_df = secrets_detected_df.drop_duplicates(
-                            configs.xgg_configs["secrets"]["unique_columns"]
+                            configs.xgg_configs["file_scanner"]["unique_columns"]
                         )
                         logger.debug(
                             f"Current secrets_detected_df count: {secrets_detected_df.shape[0]}"

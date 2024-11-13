@@ -121,6 +121,8 @@ secrets:
       "Day",
       "Hour",
     ]
+
+file_scanner:
   local_file_scan_detection_columns:
     [
       "Source",

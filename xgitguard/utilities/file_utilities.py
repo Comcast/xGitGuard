@@ -28,11 +28,17 @@ logger = logging.getLogger("xgg_logger")
 
 def read_text_file(file_path):
     """
-    Read text file utility
-        Read the text file from the given path
-        if file is not present, exit
-    params: file_path - string
-    returns: file_data - list
+    Read text file utility.
+
+    This function performs the following steps:
+        - Read the text file from the given path.
+        - If the file is not present, exit.
+
+    Args:
+        file_path (str): The path to the text file.
+
+    Returns:
+        list: The content of the file as a list of lines.
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
     if os.path.exists(file_path):
@@ -51,11 +57,17 @@ def read_text_file(file_path):
 
 def read_yaml_file(file_path):
     """
-    Read yaml file utility
-        Read the yaml file from the given path
-        if file is not present, return Empty Data
-    params: file_path - string
-    returns: file_data - list
+    Read YAML file utility.
+
+    This function performs the following steps:
+        - Read the YAML file from the given path.
+        - If the file is not present, return empty data.
+
+    Args:
+        file_path (str): The path to the YAML file.
+
+    Returns:
+        dict: The content of the YAML file as a dictionary, or an empty dictionary if the file is not present.
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
     if os.path.exists(file_path):
@@ -74,12 +86,18 @@ def read_yaml_file(file_path):
 
 def read_csv_file(file_path, output="list", header=0):
     """
-    Read CSV file utility
-        Read the csv file from the given path
-        if file is not present, return Empty Data
-    params: file_path - string
-    params: output - string - Dataframe or List - Default "list"
-    returns: file_data - empty dataframe or list
+    Read CSV file utility.
+
+    This function performs the following steps:
+        - Read the CSV file from the given path.
+        - If the file is not present, return empty data.
+
+    Args:
+        file_path (str): The path to the CSV file.
+        output (str): The format of the output, either "dataframe" or "list". Default is "list".
+
+    Returns:
+        file_data: The content of the CSV file as a DataFrame or a list, or an empty DataFrame or list if the file is not present.
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
     if os.path.exists(file_path):
@@ -104,14 +122,20 @@ def read_csv_file(file_path, output="list", header=0):
 
 def write_to_csv_file(dataframe, csv_file_path, sep=",", write_mode="append"):
     """
-    Write to CSV file utility
-        Write the Dataframe in the path given if file not present
-        Raise exception if columns order and counts not match
-        Append to the existing file if file already present
-    params: dataframe - Pandas Dataframe
-    params: csv_file_path - string
-    params: sep - string - Default ","
-    returns: True or False
+    Write to CSV file utility.
+
+    This function performs the following steps:
+        - Write the DataFrame to the given path if the file is not present.
+        - Raise an exception if the column order and counts do not match.
+        - Append to the existing file if the file is already present.
+
+    Args:
+        dataframe (pd.DataFrame): The Pandas DataFrame to write.
+        csv_file_path (str): The path to the CSV file.
+        sep (str, optional): The separator to use. Default is ",".
+
+    Returns:
+        bool: True if the operation was successful, False otherwise.
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
     logger.info(f"Write Called on: {csv_file_path}")
@@ -159,10 +183,14 @@ def write_to_csv_file(dataframe, csv_file_path, sep=",", write_mode="append"):
 
 def write_pickle_file(object, object_file):
     """
-    Write the given object as pickle file
-    params: object - object - object to write
-    params: object_file - string - object file path
-    returns: - True
+    Write the given object as a pickle file.
+
+    Args:
+        obj (object): The object to write.
+        object_file (str): The path to the pickle file.
+
+    Returns:
+        bool: True if the operation was successful.
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
     logger.info(f"Writing object as pickle file: {object_file}")
@@ -178,9 +206,13 @@ def write_pickle_file(object, object_file):
 
 def read_pickle_file(object_file=""):
     """
-    Read the pickle object file and return the object
-    params: object_path - string - Object file path
-    returns: object - Object
+    Read the pickle object file and return the object.
+
+    Args:
+        object_path (str): The path to the pickle file.
+
+    Returns:
+        object: The deserialized object from the pickle file.
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
     if object_file:
@@ -199,19 +231,25 @@ def read_pickle_file(object_file=""):
 
 def read_file_content(file_path, output="list"):
     """
-    Read file utility
-        Read the file from the given path
-        if file is not present, exit
-    params: file_path - string
-    params: output - string - Default - list
-    returns: file_data - string or List
+    Read file utility.
+
+    This function performs the following steps:
+        - Read the file from the given path.
+        - If the file is not present, exit.
+
+    Args:
+        file_path (str): The path to the file.
+        output (str, optional): The format of the output, either "string" or "list". Default is "list".
+
+    Returns:
+        file_data (str or list): The content of the file as a string or a list of lines.
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
     if os.path.exists(file_path):
         logger.debug(f"Reading data from file path: {file_path}")
         try:
             with open(file_path, "r") as file:
-                if output == list:
+                if output == "list":
                     file_data = file.readlines()
                 else:
                     file_data = file.read()

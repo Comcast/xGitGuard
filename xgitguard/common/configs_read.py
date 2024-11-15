@@ -50,9 +50,10 @@ class ConfigsData:
 
     def read_xgg_configs(self, file_name):
         """
-        Read the given xgg_configs yaml file in config path
-        Set the Class Variable for further use
-        params: file_name - string
+        Read the given xgg_configs YAML file in the config path and set the class variable for further use.
+
+        Params:
+            file_name (str): The name of the configuration file.
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
         # Loading xgg_configs from xgg_configs_file
@@ -70,11 +71,13 @@ class ConfigsData:
 
     def read_primary_keywords(self, file_name):
         """
-        Read the given primary keywords csv file in config path
-        Set the Class Variable for further use
-        params: file_name - string
+        Read the given primary keywords CSV file in the config path and set the class variable for further use.
+
+        Params:
+            file_name (str): The name of the CSV file.
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
+
         # Loading primary keywords from primary keywords file
         self.primary_keywords_file = os.path.join(self.config_dir, file_name)
         self.primary_keywords = read_csv_file(
@@ -87,11 +90,12 @@ class ConfigsData:
 
     def read_secondary_keywords(self, file_name):
         """
-        Read the given secondary keywords csv file in config path
+        Read the given secondary keywords csv file in config direcotry
         Set the Class Variable for further use
         params: file_name - string
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
+
         # Loading secondary keywords from secondary keywords file
         self.secondary_keywords_file = os.path.join(self.config_dir, file_name)
         self.secondary_keywords = read_csv_file(
@@ -104,12 +108,13 @@ class ConfigsData:
 
     def read_secondary_credentials(self, file_name):
         """
-        Read the given secondary keywords csv file in config path
+        Read the given secondary credentials csv file in config directory
         Set the Class Variable for further use
         params: file_name - string
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
-        # Loading secondary keywords from secondary keywords file
+
+        # Loading secondary Credentials from secondary credentials file
         self.secondary_credentials_file = os.path.join(self.config_dir, file_name)
         self.secondary_credentials = read_csv_file(
             self.secondary_credentials_file, output="list", header=0
@@ -126,10 +131,12 @@ class ConfigsData:
         params: file_name - string
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
+
         # Get the extensions from extensions file
         self.extensions_file = os.path.join(self.config_dir, file_name)
         self.extensions = read_csv_file(self.extensions_file, output="list", header=0)
         self.extensions = [item for sublist in self.extensions for item in sublist]
+
         # logger.debug(f"Extensions: {self.extensions}")
 
     def read_hashed_url(self, file_name):
@@ -139,10 +146,12 @@ class ConfigsData:
         params: file_name - string
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
+
         # Loading Existing url hash detections
         self.hashed_url_file = os.path.join(self.output_dir, file_name)
         hashed_key_urls = read_csv_file(self.hashed_url_file, output="list", header=0)
         self.hashed_urls = [row[0] for row in hashed_key_urls]
+
         # logger.debug(f"hashed_urls: {self.hashed_urls}")
 
     def read_training_data(self, file_name):
@@ -246,11 +255,12 @@ class ConfigsData:
 
     def read_search_paths(self, file_name):
         """
-        Read the given search paths  csv file in config path
+        Read the given search paths  csv file in config directory
         Set the Class Variable for further use
         params: file_name - string
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
+
         # Loading the search paths file to retrieve the paths that need the extension filter applied
         self.search_paths_file = os.path.join(self.config_dir, file_name)
         self.search_paths = read_csv_file(
@@ -261,11 +271,12 @@ class ConfigsData:
 
     def read_search_files(self, file_name):
         """
-        Read the given search paths  csv file in config path
+        Read the given search paths  csv file in config directory
         Set the Class Variable for further use
         params: file_name - string
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
+
         # Reading the paths of files to be searched after applying the extension filter
         self.target_paths_file = os.path.join(self.output_dir, file_name)
         self.search_files = read_csv_file(
@@ -286,12 +297,16 @@ class ConfigsData:
         hashed_key_files = read_csv_file(self.hashed_file, output="", header=0)
         try:
             self.hashed_files = (
-                hashed_key_files["hashed_files"].drop_duplicates().tolist()
+                hashed_key_files.get("hashed_files").drop_duplicates().tolist()
             )
             self.hashed_file_modified_time = (
-                hashed_key_files["file_modification_hash"].drop_duplicates().tolist()
+                hashed_key_files.get("file_modification_hash")
+                .drop_duplicates()
+                .tolist()
             )
-            self.hash_file_path = hashed_key_files["files"].drop_duplicates().tolist()
+            self.hash_file_path = (
+                hashed_key_files.get("files").drop_duplicates().tolist()
+            )
         except:
             self.hashed_files = []
             self.hashed_file_modified_time = []

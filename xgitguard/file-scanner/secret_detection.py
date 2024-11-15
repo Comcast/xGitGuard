@@ -1,12 +1,13 @@
 import argparse
+import hashlib
+import math
 import os
+import pathlib
+import re
 import sys
 from datetime import datetime
 import pandas as pd
-import pathlib
-import hashlib
-import math
-import re
+
 
 MODULE_DIR = os.path.dirname(os.path.realpath(__file__))
 parent_dir = os.path.dirname(MODULE_DIR)
@@ -30,22 +31,25 @@ total_processed_search, detection_writes_count = 0, 0
 
 def check_existing_detections(file_path):
     """
-    Check whether the current files where processed in previous runs
-    for each path
-        check timestamp chnage of the file
-        check md5 sum for the file
-        check the  hash in previous detected files
-        if not present add them to further process
-        skip if its already present in detected files
+    Check whether the current files were processed in previous runs.
 
-    params: file_path - String - file path string
+    For each path:
+        - Check the timestamp change of the file.
+        - Check the MD5 sum of the file.
+        - Check the hash in previously detected files.
+        - If not present, add them for further processing.
+        - Skip if it is already present in detected files.
 
-    returns: new_hashed_files - List - New File Hash detected
+    Args:
+        file_path (str): The file path string.
+
+    Returns:
+        new_hashed_files (list): List of new file hashes detected.
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
-    new_hashed_files, new_hashed_file = [], []
     global file_prefix
     global configs
+    new_hashed_files, new_hashed_file = [], []
 
     # Get the Already predicted hashed file list if present
     try:
@@ -62,9 +66,7 @@ def check_existing_detections(file_path):
         try:
             if hash_object:
                 if not hash_object in configs.hashed_file_modified_time:
-                    new_hashed_file.append(file_path)
-                    new_hashed_file.append(hash_object)
-                    new_hashed_file.append("")
+                    new_hashed_file.extend([file_path, hash_object, ""])
                     new_hashed_files.append(new_hashed_file)
         except Exception as e:
             logger.error(f"Hash File Write error: {e}")
@@ -94,11 +96,15 @@ def check_existing_detections(file_path):
 
 def calculate_confidence(secondary_keyword, extension, secret):
     """
-    Calculates confidence scores for given Keywords
-    params: secondary_keyword - string
-    params: extension - string
-    params: secret - string - Detected secret
-    returns: confidence score
+    Calculate confidence scores for given keywords.
+
+    Args:
+        secondary_keyword (str): The secondary keyword.
+        extension (str): The file extension.
+        secret (str): The detected secret.
+
+    Returns:
+        float: The confidence score.
     """
     # logger.debug("<<<< 'Current Executing Function' >>>>")
     try:
@@ -188,19 +194,24 @@ def format_detection(
     is_secondary_credential=False,
 ):
     """
-    Format the secret data from the given code content and other data
-        Format the secrets data in the required format
-        Calculate the secrets confidence values
-        Mask the secret if present
-        Return the final formatted detections
+    Format the secret data from the given code content and other data.
 
-    params: keyword - string - Secondary Keyword
-    params: org_url - string - File Path
-    params: code_content - list - User code content
-    params: secrets - list - Detected secrets list
-    params: keyword_count- int - secondary keyword count
-    params: is_secondary_credential - bool- Flag to check whether secret is secondary credential
-    returns: secrets_data_list - list - List of formatted detections
+    This function performs the following steps:
+        - Format the secrets data in the required format.
+        - Calculate the secrets confidence values.
+        - Mask the secret if present.
+        - Return the final formatted detections.
+
+    Args:
+        keyword (str): The secondary keyword.
+        org_url (str): The file path.
+        code_content (list): The user code content.
+        secrets (list): The detected secrets list.
+        keyword_count (int): The secondary keyword count.
+        is_secondary_credential (bool): Flag to check whether the secret is a secondary credential.
+
+    Returns:
+        dict: The final formatted detections.
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
     secrets_data_list = []
@@ -241,33 +252,33 @@ def format_detection(
                         content = []
                         content.append(secret_line)
                         code_line = secret_line
-                        valid_secret_row.append(secret)
                         # Mask the current secret
                         masked_secret = mask_data(code_line, secret)
-                        valid_secret_row.append(masked_secret)
-
-                        valid_secret_row.append(
-                            datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                        )
-                        valid_secret_row.append(confidence_score[0])
                         count_score = math.log2(50) / (math.log2(keyword_count + 1) + 1)
-                        valid_secret_row.append(count_score)
-                        valid_secret_row.append(confidence_score[1])
                         d_match = math.log2(100) / (
                             math.log2(confidence_score[2] + 1) + 1
                         )
-                        valid_secret_row.append(d_match)
-                        valid_secret_row.append(
-                            confidence_score[0]
-                            + confidence_score[1]
-                            + count_score
-                            + d_match
-                        )
+
                         now = datetime.now()
-                        valid_secret_row.append(now.year)
-                        valid_secret_row.append(now.month)
-                        valid_secret_row.append(now.day)
-                        valid_secret_row.append(now.hour)
+                        valid_secret_row.extend(
+                            [
+                                secret,
+                                masked_secret,
+                                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                                confidence_score[0],
+                                count_score,
+                                confidence_score[1],
+                                d_match,
+                                confidence_score[0]
+                                + confidence_score[1]
+                                + count_score
+                                + d_match,
+                                now.year,
+                                now.month,
+                                now.day,
+                                now.hour,
+                            ]
+                        )
                         secrets_data_list.append(valid_secret_row)
 
     logger.debug(f"Current formatted secrets_data_list count: {len(secrets_data_list)}")
@@ -284,19 +295,24 @@ def process_file_content(
     is_secondary_credential=False,
 ):
     """
-    Process the Search
-        Remove unnecessary data from code content
-        Extract secret values using regex
-        Format the secrets detected
-        Return the secrets detected
+    Process the search to detect secrets.
 
-    params: file_path - string
-    params: code_content - string
-    params: keyword - string
-    params: extension - string
-    params: secrets_data - list
-    params: is_secondary_credential - bool
-    returns: secrets_data_list - list - Detected secrets data
+    This function performs the following steps:
+        - Remove unnecessary data from code content.
+        - Extract secret values using regex.
+        - Format the detected secrets.
+        - Return the detected secrets.
+
+    Args:
+        file_path (str): The file path.
+        code_content (str): The code content.
+        keyword (str): The keyword to search for.
+        extension (str): The file extension.
+        secrets_data (list): The list to store detected secrets.
+        is_secondary_credential (bool): Flag to indicate if the secret is a secondary credential.
+
+    Returns:
+        list: The list of detected secrets data.
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
     secrets_data_list = []
@@ -340,33 +356,36 @@ def run_detection(
     code_content="",
 ):
     """
-    Run search with Secondary Keyword and extension combination in the given file
-    Steps:
-        Get the code content for the given file
-        Clean the code content and extract secrets
-        Detect the secrets using RegEx and format secret records
-        Predict the secret data using ML model
-        Write the cleaned and detected secret data
+    Run search with secondary keyword and extension combination in the given file.
 
-    params: file_path - string
-    params: secondary_keyword - string
-    params: extension - string
-    params: ml_prediction - Boolean - optional - Default: True
-    params: code_content - string
-    params: secrets_data - list
-    returns: None
+    Steps:
+        - Get the code content for the given file.
+        - Clean the code content and extract secrets.
+        - Detect the secrets using RegEx and format secret records.
+        - Predict the secret data using an ML model.
+        - Write the cleaned and detected secret data.
+
+    Args:
+        file_path (str): The file path.
+        secondary_keyword (str): The secondary keyword.
+        extension (str): The file extension.
+        ml_prediction (bool, optional): Flag to indicate if ML prediction should be used. Default is True.
+        code_content (str): The code content.
+        secrets_data (list): The list to store detected secrets.
+
+    Returns:
+        None
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
+    global configs
+    global detection_writes_count
     # Read and Setup Global Configuration Data to reference in all process
     try:
-        global configs
         if configs:
             pass
     except:
         # Setting Global configuration Data
         configs = ConfigsData()
-
-    global detection_writes_count
 
     if not secondary_keyword and not secondary_credentials:
         logger.error(f"Please pass secondary_keyword or credentials like 'password'")
@@ -418,16 +437,16 @@ def run_detection(
                 # logger.debug(f"secrets_detected: {secrets_detected}")
                 secrets_detected_df = pd.DataFrame(
                     secrets_detected,
-                    columns=configs.xgg_configs["file_scanner"][
+                    columns=configs.xgg_configs.get("file_scanner").get(
                         "local_file_scan_detection_columns"
-                    ],
+                    ),
                 )
             except Exception as e:
                 logger.error(f"secrets_detected Dataframe creation failed. Error: {e}")
                 secrets_detected_df = pd.DataFrame(
-                    columns=configs.xgg_configs["file_scanner"][
+                    columns=configs.xgg_configs.get("file_scanner").get(
                         "local_file_scan_detection_columns"
-                    ],
+                    ),
                 )
             if not secrets_detected_df.empty:
                 if ml_prediction == True:
@@ -437,16 +456,16 @@ def run_detection(
                             pass
                     except:
                         train_data = (
-                            f"{configs.xgg_configs['model'][model_preference]['training_data_cred']}"
+                            f"{configs.xgg_configs.get('model').get(model_preference).get('training_data_cred')}"
                             if is_secondary_credential
-                            else f"{configs.xgg_configs['model'][model_preference]['training_data_key']}"
+                            else f"{configs.xgg_configs.get('model').get(model_preference).get('training_data_key')}"
                         )
                         configs.read_training_data(file_name=train_data)
 
                     model_file_name = (
-                        f"{configs.xgg_configs['model'][model_preference]['model_cred_file']}"
+                        f"{configs.xgg_configs.get('model').get(model_preference).get('model_cred_file')}"
                         if is_secondary_credential
-                        else f"{configs.xgg_configs['model'][model_preference]['model_key_file']}"
+                        else f"{configs.xgg_configs.get('model').get(model_preference).get('model_key_file')}"
                     )
                     secrets_ml_predicted = ml_prediction_process(
                         model_name=model_file_name,
@@ -459,7 +478,9 @@ def run_detection(
                             ["Secret"], axis=1
                         )
                         secrets_ml_predicted = secrets_ml_predicted.drop_duplicates(
-                            configs.xgg_configs["file_scanner"]["unique_columns"]
+                            configs.xgg_configs.get("file_scanner").get(
+                                "unique_columns"
+                            )
                         )
                         logger.debug(
                             f"Current secrets_ml_predicted count: {secrets_ml_predicted.shape[0]}"
@@ -481,7 +502,9 @@ def run_detection(
                             ["Secret"], axis=1
                         )
                         secrets_detected_df = secrets_detected_df.drop_duplicates(
-                            configs.xgg_configs["file_scanner"]["unique_columns"]
+                            configs.xgg_configs.get("file_scanner").get(
+                                "unique_columns"
+                            )
                         )
                         logger.debug(
                             f"Current secrets_detected_df count: {secrets_detected_df.shape[0]}"
@@ -510,13 +533,14 @@ def run_detection(
 
 def validate_keyword(search_query_list, file_path):
     """
-    Run Search  for given  file content
-    and  return whether keywords presentor not
+    Run search for the given file content and return whether keywords are present or not.
 
-    params: keywords - List - secondary_keyword
-    params: file_path - String - file/Directory path string
+    Args:
+        keywords (list): The list of secondary keywords.
+        file_path (str): The file or directory path.
 
-    returns: List
+    Returns:
+        list: A list indicating the presence of keywords.
     """
     keyword_list = []
     try:
@@ -539,15 +563,18 @@ def run_search(
     ml_prediction=True,
 ):
     """
-    Run Search  for given  directory or file using secondary keywords,secondary credentials & extensions
-    and process return file path where this keywords present for prediction.
+    Run search for the given directory or file using secondary keywords, secondary credentials, and extensions,
+    and return the file paths where these keywords are present for prediction.
 
-    params: secondary_keywords - list - secondary_keywords
-    params: secondary_credentials - list - secondary_credentials
-    params: extensions - string - extensions
-    params: search_path - String - file/Directory path string
-    params: ml_prediction - String - ML Prediction Flag
-    returns: Boolean
+    Args:
+        secondary_keywords (list): The list of secondary keywords.
+        secondary_credentials (list): The list of secondary credentials.
+        extensions (str): The file extensions to filter by.
+        search_path (str): The file or directory path.
+        ml_prediction (str): The ML prediction flag.
+
+    Returns:
+        bool: Indicates whether the keywords are present.
     """
 
     logger.debug("<<<< 'Current Executing Function' >>>>")
@@ -616,14 +643,16 @@ def run_search(
 
 def setup_logger(run_mode="default", log_level=10, console_logging=True):
     """
-    Call logger create module and setup the logger for current run
-    params: run_mode - str - optional - Default - default
-    params: log_level - int - optional - Default - 20 - INFO
-    params: console_logging - Boolean - optional - Enable console logging - default True
+    Call the logger creation module and set up the logger for the current run.
+
+    Args:
+        run_mode (str, optional): The run mode. Default is 'default'.
+        log_level (int, optional): The logging level. Default is 20 (INFO).
+        console_logging (bool, optional): Enable console logging. Default is True.
     """
+    global logger
     log_dir = os.path.abspath(os.path.join(os.path.dirname(MODULE_DIR), ".", "logs"))
     log_file_name = f"{run_mode}_{os.path.basename(__file__).split('.')[0]}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-    global logger
     # Creates a logger
     logger = create_logger(
         log_level, console_logging, log_dir=log_dir, log_file_name=log_file_name
@@ -632,17 +661,22 @@ def setup_logger(run_mode="default", log_level=10, console_logging=True):
 
 def arg_parser():
     """
-    Parse the command line Arguments and return the values
-    params: None
-    returns: secondary_keywords - list
-    returns: ML Prediction - Boolean - Default - True
-    returns: file_path - string
-    returns: model_preference - string - Default - public
-    returns: log_level - int - Default - 20  - INFO
-    returns: console_logging - Boolean - Default - True
+    Parse the command line arguments and return the values.
+
+    Args:
+        None
+
+    Returns:
+        secondary_keywords (list): The list of secondary keywords.
+        ml_prediction (bool): The ML prediction flag. Default is True.
+        file_path (str): The file path.
+        model_preference (str): The model preference. Default is 'public'.
+        log_level (int): The logging level. Default is 20 (INFO).
+        console_logging (bool): Enable console logging. Default is True.
     """
 
     argparser = argparse.ArgumentParser()
+    global file_prefix
     flag_choices = ["Y", "y", "Yes", "YES", "yes", "N", "n", "No", "NO", "no"]
     model_choices = [
         "public",
@@ -653,7 +687,6 @@ def arg_parser():
         "Enterprise",
     ]
     log_level_choices = [10, 20, 30, 40, 50]
-    global file_prefix
 
     argparser.add_argument(
         "-keys",
@@ -788,120 +821,132 @@ if __name__ == "__main__":
         console_logging,
     ) = arg_parser()
 
-    # Setting up Logger
-    run_mode = file_prefix
+    try:
+        # Setting up Logger
+        run_mode = file_prefix
 
-    setup_logger(run_mode, log_level, console_logging)
+        setup_logger(run_mode, log_level, console_logging)
 
-    logger.info("xGitGuard File Search Process Started")
+        logger.info("xGitGuard File Search Process Started")
 
-    # Read and Setup Global Configuration Data to reference in all process
-    configs = ConfigsData()
-    configs.read_extensions(file_name="extensions.csv")
-    logger.debug(f"Total Extensions: {len(configs.extensions)}")
+        # Read and Setup Global Configuration Data to reference in all process
+        configs = ConfigsData()
+        configs.read_extensions(file_name="extensions.csv")
+        logger.debug(f"Total Extensions: {len(configs.extensions)}")
 
-    if secondary_keywords:
-        if isinstance(secondary_keywords, list):
-            configs.secondary_keywords = secondary_keywords
-        else:
-            logger.error(f"Please pass secondary_keywords in List like '['password',]'")
-            sys.exit(1)
-    else:
-        configs.read_secondary_keywords(file_name="secondary_keys.csv")
-
-    if secondary_credentials:
-        if isinstance(secondary_credentials, list):
-            configs.secondary_credentials = secondary_credentials
-        else:
-            logger.error(
-                f"Please pass secondary credentials in List like '['password',]'"
-            )
-            sys.exit(1)
-    else:
-        configs.read_secondary_credentials(file_name="secondary_creds.csv")
-
-    logger.info(f"Total Secondary Keywords: {len(configs.secondary_keywords)}")
-    logger.info(f"Total Secondary Credentials: {len(configs.secondary_credentials)}")
-
-    secondary_keywords = configs.secondary_keywords
-    secondary_credentials = configs.secondary_credentials
-
-    if search_path:
-        if os.path.isfile(search_path):
-            try:
-                if search_path.endswith(".gitignore"):
-                    extensions = ".gitignore"
-                else:
-                    file, ext = os.path.splitext(search_path)
-                    extensions = ext[1:]
-                if extensions not in configs.extensions:
-                    logger.debug(f"File path extension not valid {search_path}")
-                    sys.exit(1)
-                total_search_pairs = (
-                    (
-                        len(configs.secondary_credentials)
-                        + len(configs.secondary_keywords)
-                    )
-                ) * len(search_path.split(","))
-                logger.info(f"Total Search Pairs: {total_search_pairs}")
-                run_search(
-                    secondary_keywords,
-                    secondary_credentials,
-                    extensions,
-                    search_path,
-                    ml_prediction,
+        if secondary_keywords:
+            if isinstance(secondary_keywords, list):
+                configs.secondary_keywords = secondary_keywords
+            else:
+                logger.error(
+                    f"Please pass secondary_keywords in List like '['password',]'"
                 )
-            except:
-                raise ValueError(
-                    f"File path has Error in config file for path {search_path}"
+                sys.exit(1)
+        else:
+            configs.read_secondary_keywords(file_name="secondary_keys.csv")
+
+        if secondary_credentials:
+            if isinstance(secondary_credentials, list):
+                configs.secondary_credentials = secondary_credentials
+            else:
+                logger.error(
+                    f"Please pass secondary credentials in List like '['password',]'"
                 )
-    else:
-        configs.read_search_files(file_name="xgg_search_files.csv")
-        search_paths = configs.search_files
-        total_search_pairs = (
-            (len(configs.secondary_keywords) + len(configs.secondary_credentials))
-        ) * len(search_paths)
-        logger.info(f"Total Search Pairs: {total_search_pairs}")
-        if search_paths:
-            for search_path in search_paths:
-                # search_path = search_path.replace(" ", "\\ ")
-                if os.path.isfile(search_path):
-                    try:
-                        if search_path.endswith(".gitignore"):
-                            extensions = ".gitignore"
-                        else:
-                            file, ext = os.path.splitext(search_path)
-                            extensions = ext[1:]
-                        if extensions not in configs.extensions:
-                            logger.debug(f"File path extension not valid {search_path}")
-                            continue
-                        run_search(
-                            secondary_keywords,
-                            secondary_credentials,
-                            extensions,
-                            search_path,
-                            ml_prediction,
+                sys.exit(1)
+        else:
+            configs.read_secondary_credentials(file_name="secondary_creds.csv")
+
+        logger.info(f"Total Secondary Keywords: {len(configs.secondary_keywords)}")
+        logger.info(
+            f"Total Secondary Credentials: {len(configs.secondary_credentials)}"
+        )
+
+        secondary_keywords = configs.secondary_keywords
+        secondary_credentials = configs.secondary_credentials
+
+        if search_path:
+            if os.path.isfile(search_path):
+                try:
+                    if search_path.endswith(".gitignore"):
+                        extensions = ".gitignore"
+                    else:
+                        file, ext = os.path.splitext(search_path)
+                        extensions = ext[1:]
+                    if extensions not in configs.extensions:
+                        logger.debug(f"File path extension not valid {search_path}")
+                        sys.exit(1)
+                    total_search_pairs = (
+                        (
+                            len(configs.secondary_credentials)
+                            + len(configs.secondary_keywords)
                         )
-                    except:
-                        if search_path.endswith(".gitignore"):
+                    ) * len(search_path.split(","))
+                    logger.info(f"Total Search Pairs: {total_search_pairs}")
+                    run_search(
+                        secondary_keywords,
+                        secondary_credentials,
+                        extensions,
+                        search_path,
+                        ml_prediction,
+                    )
+                except:
+                    raise ValueError(
+                        f"File path has Error in config file for path {search_path}"
+                    )
+        else:
+            configs.read_search_files(file_name="xgg_search_files.csv")
+            search_paths = configs.search_files
+            total_search_pairs = (
+                (len(configs.secondary_keywords) + len(configs.secondary_credentials))
+            ) * len(search_paths)
+            logger.info(f"Total Search Pairs: {total_search_pairs}")
+            if search_paths:
+                for search_path in search_paths:
+                    # search_path = search_path.replace(" ", "\\ ")
+                    if os.path.isfile(search_path):
+                        try:
+                            if search_path.endswith(".gitignore"):
+                                extensions = ".gitignore"
+                            else:
+                                file, ext = os.path.splitext(search_path)
+                                extensions = ext[1:]
+                            if extensions not in configs.extensions:
+                                logger.debug(
+                                    f"File path extension not valid {search_path}"
+                                )
+                                continue
                             run_search(
                                 secondary_keywords,
                                 secondary_credentials,
-                                ".gitignore",
+                                extensions,
                                 search_path,
                                 ml_prediction,
                             )
-                        else:
-                            raise ValueError(
-                                f"File path has Error in config file for path {search_path}"
-                            )
-                else:
-                    logger.debug(f"File path not found path {search_path}")
+                        except:
+                            if search_path.endswith(".gitignore"):
+                                run_search(
+                                    secondary_keywords,
+                                    secondary_credentials,
+                                    ".gitignore",
+                                    search_path,
+                                    ml_prediction,
+                                )
+                            else:
+                                raise ValueError(
+                                    f"File path has Error in config file for path {search_path}"
+                                )
+                    else:
+                        logger.debug(f"File path not found path {search_path}")
 
-        else:
-            logger.info(f"No Search paths to process from config file. Ending.")
-            sys.exit(1)
-    logger.info(f"Total Processed Search: {total_processed_search}")
-    logger.info(f"Total Detections Write: {detection_writes_count}")
+            else:
+                logger.info(f"No Search paths to process from config file. Ending.")
+                sys.exit(1)
+        logger.info(f"Total Processed Search: {total_processed_search}")
+        logger.info(f"Total Detections Write: {detection_writes_count}")
 
-    logger.info("xGitGuard File Search Process Completed")
+        logger.info("xGitGuard File Search Process Completed")
+    except Exception as e:
+        logger.error(
+            f"xGitGuard Secret detection process encountered an exception: {e}"
+        )
+        sys.exit(1)

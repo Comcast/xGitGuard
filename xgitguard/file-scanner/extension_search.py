@@ -19,11 +19,13 @@ new_search = 0
 
 def write_data(data):
     """
-    Write the the searched data for an extension
+    Write the searched data for a given extension.
 
-    params: data - string - file path
+    Args:
+        data (str): The file path.
 
-    returns: Boolean
+    Returns:
+        bool: Indicates whether the operation was successful.
     """
     global new_search
     try:
@@ -49,12 +51,14 @@ def write_data(data):
 
 def find_files(extensions=[], search_path=""):
     """
-    Run Search  for given  directory usings extensions
-    and process return file path where this extensions present.
+    Run search for the given directory using extensions and return file paths where these extensions are present.
 
-    params: extensions - list - extensions
-    params: search_path - String - file/Directory path string
-    returns: Boolean
+    Args:
+        extensions (list): The list of file extensions to search for.
+        search_path (str): The file or directory path.
+
+    Returns:
+        list: A list of file paths where the specified extensions are present.
     """
     if os.path.isfile(search_path):
         write_data([search_path])
@@ -83,13 +87,15 @@ def find_files(extensions=[], search_path=""):
 
 def setup_logger(log_level=10, console_logging=True):
     """
-    Call logger create module and setup the logger for current run
-    params: log_level - int - optional - Default - 20 - INFO
-    params: console_logging - Boolean - optional - Enable console logging - default True
+    Call the logger creation module and set up the logger for the current run.
+
+    Args:
+        log_level (int, optional): The logging level. Default is 20 (INFO).
+        console_logging (bool, optional): Enable console logging. Default is True.
     """
+    global logger
     log_dir = os.path.abspath(os.path.join(os.path.dirname(MODULE_DIR), ".", "logs"))
     log_file_name = f"{os.path.basename(__file__).split('.')[0]}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
-    global logger
     # Creates a logger
     logger = create_logger(
         log_level, console_logging, log_dir=log_dir, log_file_name=log_file_name
@@ -98,14 +104,17 @@ def setup_logger(log_level=10, console_logging=True):
 
 def arg_parser():
     """
-    Parse the command line Arguments and return the values
-    params: None
-    returns: extensions - list
-    returns: search_path - string
-    returns: log_level - int - Default - 20  - INFO
-    returns: console_logging - Boolean - Default - True
-    """
+    Parse the command line arguments and return the values.
 
+    Args:
+        None
+
+    Returns:
+        extensions (list): The list of file extensions to search for.
+        search_path (str): The file or directory path.
+        log_level (int): The logging level. Default is 20 (INFO).
+        console_logging (bool): Enable console logging. Default is True.
+    """
     argparser = argparse.ArgumentParser()
     flag_choices = ["Y", "y", "Yes", "YES", "yes", "N", "n", "No", "NO", "no"]
     log_level_choices = [10, 20, 30, 40, 50]
@@ -190,23 +199,29 @@ if __name__ == "__main__":
         console_logging,
     ) = arg_parser()
 
-    # Setting up Logger
-    setup_logger(log_level, console_logging)
+    try:
+        # Setting up Logger
+        setup_logger(log_level, console_logging)
 
-    logger.info("xGitGuard File Extension Process Started")
-    # Read and Setup Global Configuration Data to reference in all process
-    configs = ConfigsData()
+        logger.info("xGitGuard File Extension Process Started")
+        # Read and Setup Global Configuration Data to reference in all process
+        configs = ConfigsData()
 
-    if search_path:
-        find_files(extensions, search_path)
-    else:
-        configs.read_search_paths(file_name="xgg_search_paths.csv")
-        search_paths = configs.search_paths
-        if search_paths:
-            for search_path in search_paths:
-                find_files(extensions, search_path)
+        if search_path:
+            find_files(extensions, search_path)
         else:
-            logger.info(f"No Search paths to process from config file. Ending.")
-            sys.exit(1)
+            configs.read_search_paths(file_name="xgg_search_paths.csv")
+            search_paths = configs.search_paths
+            if search_paths:
+                for search_path in search_paths:
+                    find_files(extensions, search_path)
+            else:
+                logger.info(f"No Search paths to process from config file. Ending.")
+                sys.exit(1)
 
-    logger.info("xGitGuard File Extension Process Completed")
+        logger.info("xGitGuard File Extension Process Completed")
+    except Exception as e:
+        logger.error(
+            f"xGitGuard Secret detection process encountered an exception: {e}"
+        )
+        sys.exit(1)

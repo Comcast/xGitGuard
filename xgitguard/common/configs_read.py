@@ -52,7 +52,7 @@ class ConfigsData:
         """
         Read the given xgg_configs YAML file in the config path and set the class variable for further use.
 
-        Params:
+        Args:
             file_name (str): The name of the configuration file.
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
@@ -73,7 +73,7 @@ class ConfigsData:
         """
         Read the given primary keywords CSV file in the config path and set the class variable for further use.
 
-        Params:
+        Args:
             file_name (str): The name of the CSV file.
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
@@ -90,9 +90,10 @@ class ConfigsData:
 
     def read_secondary_keywords(self, file_name):
         """
-        Read the given secondary keywords csv file in config direcotry
-        Set the Class Variable for further use
-        params: file_name - string
+        Read the given secondary keywords CSV file in the config directory and set the class variable for further use.
+
+        Args:
+            file_name (str): The name of the CSV file.
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
 
@@ -108,9 +109,10 @@ class ConfigsData:
 
     def read_secondary_credentials(self, file_name):
         """
-        Read the given secondary credentials csv file in config directory
-        Set the Class Variable for further use
-        params: file_name - string
+        Read the given secondary credentials CSV file in the config directory and set the class variable for further use.
+
+        Args:
+            file_name (str): The name of the CSV file.
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
 
@@ -126,9 +128,10 @@ class ConfigsData:
 
     def read_extensions(self, file_name="extensions.csv"):
         """
-        Read the given extensions csv file in config path
-        Set the Class Variable for further use
-        params: file_name - string
+        Read the given extensions CSV file in the config path and set the class variable for further use.
+
+        Args:
+            file_name (str): The name of the CSV file.
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
 
@@ -141,9 +144,10 @@ class ConfigsData:
 
     def read_hashed_url(self, file_name):
         """
-        Read the given hashed url csv file in output path
-        Set the Class Variable for further use
-        params: file_name - string
+        Read the given hashed URL CSV file in the output path and set the class variable for further use.
+
+        Args:
+            file_name (str): The name of the CSV file.
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
 
@@ -156,9 +160,10 @@ class ConfigsData:
 
     def read_training_data(self, file_name):
         """
-        Read the given training data csv file in output path
-        Set the Class Variable for further use
-        params: file_name - string
+        Read the given training data CSV file in the output path and set the class variable for further use.
+
+        Args:
+            file_name (str): The name of the CSV file.
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
         self.training_data_file = os.path.join(self.output_dir, file_name)
@@ -177,9 +182,12 @@ class ConfigsData:
 
     def read_confidence_values(self, file_name="confidence_values.csv"):
         """
-        Read the given confidence values csv file in config path
-        Set the key as index and the Class Variable for further use
-        params: file_name - string
+        Read the given confidence values CSV file in the config path and set the key as index.
+
+        This function sets the class variable for further use.
+
+        Args:
+            file_name (str): The name of the CSV file.
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
         # Loading confidence levels from file
@@ -204,10 +212,12 @@ class ConfigsData:
 
     def read_dictionary_words(self, file_name="dictionary_words.csv"):
         """
-        Read the given dictionary words csv file in config path
-        Create dictionary similarity values
-        Set the Class Variables for further use
-        params: file_name - string
+        Read the given dictionary words CSV file in the config path.
+
+        This function creates dictionary similarity values and sets the class variables for further use.
+
+        Args:
+            file_name (str): The name of the CSV file.
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
         # Creating dictionary similarity values
@@ -242,9 +252,10 @@ class ConfigsData:
 
     def read_stop_words(self, file_name="stop_words.csv"):
         """
-        Read the given stop words csv file in config path
-        Set the Class Variable for further use
-        params: file_name - string
+        Read the given stop words CSV file in the config path and set the class variable for further use.
+
+        Args:
+            file_name (str): The name of the CSV file.
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
         # Get the programming language stop words
@@ -255,9 +266,10 @@ class ConfigsData:
 
     def read_search_paths(self, file_name):
         """
-        Read the given search paths  csv file in config directory
-        Set the Class Variable for further use
-        params: file_name - string
+        Read the given search paths CSV file in the config directory and set the class variable for further use.
+
+        Args:
+            file_name (str): The name of the CSV file.
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
 
@@ -271,9 +283,10 @@ class ConfigsData:
 
     def read_search_files(self, file_name):
         """
-        Read the given search paths  csv file in config directory
-        Set the Class Variable for further use
-        params: file_name - string
+        Read the given search paths CSV file in the config directory and set the class variable for further use.
+
+        Args:
+            file_name (str): The name of the CSV file.
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
 
@@ -287,9 +300,10 @@ class ConfigsData:
 
     def read_hashed_file(self, file_name):
         """
-        Read the given hashed file csv file in output path
-        Set the Class Variable for further use
-        params: file_name - string
+        Read the given hashed file CSV file in the output path and set the class variable for further use.
+
+        Args:
+            file_name (str): The name of the CSV file.
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
         # Loading Existing url hash detections

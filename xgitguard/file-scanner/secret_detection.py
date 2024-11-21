@@ -83,9 +83,9 @@ def check_existing_detections(file_path):
                     ).hexdigest()
                     if parse_checksum:
                         if not parse_checksum in configs.hashed_files:
-                            new_hashed_file.append(file_path)
-                            new_hashed_file.append(hash_object)
-                            new_hashed_file.append(parse_checksum)
+                            new_hashed_file.extend(
+                                [file_path, hash_object, parse_checksum]
+                            )
                             new_hashed_files.append(new_hashed_file)
         except Exception as e:
             logger.error(f"Hash File Write error: {e}")

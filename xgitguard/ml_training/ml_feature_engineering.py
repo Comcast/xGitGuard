@@ -15,6 +15,7 @@ limitations under the License.
 
 SPDX-License-Identifier: Apache-2.0
 """
+
 import argparse
 import logging
 import os
@@ -222,19 +223,11 @@ if __name__ == "__main__":
             public_cred_src_file = os.path.join(
                 output_dir, "public_cred_train_source.csv"
             )
-            enterprise_cred_src_file = os.path.join(output_dir, "cred_train_source.csv")
             if os.path.exists(public_cred_src_file):
                 logger.info(
                     "Using public cred source data to engineer for public model"
                 )
                 training_source_data_file = "public_cred_train_source.csv"
-                training_data_file = "public_cred_train.csv"
-
-            elif os.path.exists(enterprise_cred_src_file):
-                logger.info(
-                    "Using enterprise cred source data to engineer for public model"
-                )
-                training_source_data_file = "cred_train_source.csv"
                 training_data_file = "public_cred_train.csv"
 
             else:
@@ -245,21 +238,11 @@ if __name__ == "__main__":
             public_key_src_file = os.path.join(
                 output_dir, "public_key_train_source.csv"
             )
-            enterprise_key_src_file = os.path.join(output_dir, "key_train_source.csv")
             if os.path.exists(public_key_src_file):
                 logger.info("Using public key source data to engineer for public model")
 
                 training_source_data_file = "public_key_train_source.csv"
                 training_data_file = "public_key_train.csv"
-
-            elif os.path.exists(enterprise_key_src_file):
-                logger.info(
-                    "Using enterprise key source data to engineer for public model"
-                )
-
-                training_source_data_file = "key_train_source.csv"
-                training_data_file = "public_key_train.csv"
-
             else:
                 logger.error(f"Key Training source data file for engineering not found")
     else:

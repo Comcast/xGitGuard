@@ -15,10 +15,10 @@ limitations under the License.
 
 SPDX-License-Identifier: Apache-2.0
 """
+
 import logging
 import os
 import sys
-
 import numpy as np
 import pandas as pd
 from scipy.stats import entropy
@@ -28,16 +28,13 @@ parent_dir = os.path.dirname(MODULE_DIR)
 sys.path.append(parent_dir)
 
 from common.configs_read import ConfigsData
-
 from utilities.common_utilities import is_num_present, is_uppercase_present
 from utilities.file_utilities import read_pickle_file
 
 logger = logging.getLogger("xgg_logger")
 
 
-def ml_prediction_process(
-    model_name, training_data, detection_data, git_env="enterprise"
-):
+def ml_prediction_process(model_name, training_data, detection_data, git_env=""):
     """
     for the given training data and detection data
         Format the detections snf training data as model needed
@@ -49,30 +46,43 @@ def ml_prediction_process(
     """
     logger.debug("<<<< 'Current Executing Function' >>>>")
     pre_prediction_data = detection_data.copy()
-    if git_env == "public":
-        detection_data = detection_data.drop(
-            [
-                "Source",
-                "Primary_Key",
-                "Commit_Details",
-                "URL",
-                "Owner",
-                "Repo_Name",
-                "Detected_Timestamp",
-                "Year",
-                "Month",
-                "Day",
-            ],
-            axis=1,
-        )
+    if git_env:
+        if git_env == "public":
+            detection_data = detection_data.drop(
+                [
+                    "Source",
+                    "Primary_Key",
+                    "Commit_Details",
+                    "URL",
+                    "Owner",
+                    "Repo_Name",
+                    "Detected_Timestamp",
+                    "Year",
+                    "Month",
+                    "Day",
+                ],
+                axis=1,
+            )
+        else:
+            detection_data = detection_data.drop(
+                [
+                    "Source",
+                    "Commit_Details",
+                    "URL",
+                    "Owner",
+                    "Repo_Name",
+                    "Detected_Timestamp",
+                    "Year",
+                    "Month",
+                    "Day",
+                ],
+                axis=1,
+            )
     else:
         detection_data = detection_data.drop(
             [
                 "Source",
-                "Commit_Details",
                 "URL",
-                "Owner",
-                "Repo_Name",
                 "Detected_Timestamp",
                 "Year",
                 "Month",

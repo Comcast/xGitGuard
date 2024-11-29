@@ -50,9 +50,10 @@ class ConfigsData:
 
     def read_xgg_configs(self, file_name):
         """
-        Read the given xgg_configs yaml file in config path
-        Set the Class Variable for further use
-        params: file_name - string
+        Read the given xgg_configs YAML file in the config path and set the class variable for further use.
+
+        Args:
+            file_name (str): The name of the configuration file.
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
         # Loading xgg_configs from xgg_configs_file
@@ -70,11 +71,13 @@ class ConfigsData:
 
     def read_primary_keywords(self, file_name):
         """
-        Read the given primary keywords csv file in config path
-        Set the Class Variable for further use
-        params: file_name - string
+        Read the given primary keywords CSV file in the config path and set the class variable for further use.
+
+        Args:
+            file_name (str): The name of the CSV file.
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
+
         # Loading primary keywords from primary keywords file
         self.primary_keywords_file = os.path.join(self.config_dir, file_name)
         self.primary_keywords = read_csv_file(
@@ -87,11 +90,13 @@ class ConfigsData:
 
     def read_secondary_keywords(self, file_name):
         """
-        Read the given secondary keywords csv file in config path
-        Set the Class Variable for further use
-        params: file_name - string
+        Read the given secondary keywords CSV file in the config directory and set the class variable for further use.
+
+        Args:
+            file_name (str): The name of the CSV file.
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
+
         # Loading secondary keywords from secondary keywords file
         self.secondary_keywords_file = os.path.join(self.config_dir, file_name)
         self.secondary_keywords = read_csv_file(
@@ -102,37 +107,63 @@ class ConfigsData:
         ]
         # logger.debug(f"secondary_keywords: {self.secondary_keywords}")
 
-    def read_extensions(self, file_name="extensions.csv"):
+    def read_secondary_credentials(self, file_name):
         """
-        Read the given extensions csv file in config path
-        Set the Class Variable for further use
-        params: file_name - string
+        Read the given secondary credentials CSV file in the config directory and set the class variable for further use.
+
+        Args:
+            file_name (str): The name of the CSV file.
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
+
+        # Loading secondary Credentials from secondary credentials file
+        self.secondary_credentials_file = os.path.join(self.config_dir, file_name)
+        self.secondary_credentials = read_csv_file(
+            self.secondary_credentials_file, output="list", header=0
+        )
+        self.secondary_credentials = [
+            item for sublist in self.secondary_credentials for item in sublist
+        ]
+        # logger.debug(f"secondary_credentials: {self.secondary_credentials}")
+
+    def read_extensions(self, file_name="extensions.csv"):
+        """
+        Read the given extensions CSV file in the config path and set the class variable for further use.
+
+        Args:
+            file_name (str): The name of the CSV file.
+        """
+        logger.debug("<<<< 'Current Executing Function' >>>>")
+
         # Get the extensions from extensions file
         self.extensions_file = os.path.join(self.config_dir, file_name)
         self.extensions = read_csv_file(self.extensions_file, output="list", header=0)
         self.extensions = [item for sublist in self.extensions for item in sublist]
+
         # logger.debug(f"Extensions: {self.extensions}")
 
     def read_hashed_url(self, file_name):
         """
-        Read the given hashed url csv file in output path
-        Set the Class Variable for further use
-        params: file_name - string
+        Read the given hashed URL CSV file in the output path and set the class variable for further use.
+
+        Args:
+            file_name (str): The name of the CSV file.
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
+
         # Loading Existing url hash detections
         self.hashed_url_file = os.path.join(self.output_dir, file_name)
         hashed_key_urls = read_csv_file(self.hashed_url_file, output="list", header=0)
         self.hashed_urls = [row[0] for row in hashed_key_urls]
+
         # logger.debug(f"hashed_urls: {self.hashed_urls}")
 
     def read_training_data(self, file_name):
         """
-        Read the given training data csv file in output path
-        Set the Class Variable for further use
-        params: file_name - string
+        Read the given training data CSV file in the output path and set the class variable for further use.
+
+        Args:
+            file_name (str): The name of the CSV file.
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
         self.training_data_file = os.path.join(self.output_dir, file_name)
@@ -151,9 +182,12 @@ class ConfigsData:
 
     def read_confidence_values(self, file_name="confidence_values.csv"):
         """
-        Read the given confidence values csv file in config path
-        Set the key as index and the Class Variable for further use
-        params: file_name - string
+        Read the given confidence values CSV file in the config path and set the key as index.
+
+        This function sets the class variable for further use.
+
+        Args:
+            file_name (str): The name of the CSV file.
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
         # Loading confidence levels from file
@@ -178,10 +212,12 @@ class ConfigsData:
 
     def read_dictionary_words(self, file_name="dictionary_words.csv"):
         """
-        Read the given dictionary words csv file in config path
-        Create dictionary similarity values
-        Set the Class Variables for further use
-        params: file_name - string
+        Read the given dictionary words CSV file in the config path.
+
+        This function creates dictionary similarity values and sets the class variables for further use.
+
+        Args:
+            file_name (str): The name of the CSV file.
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
         # Creating dictionary similarity values
@@ -216,9 +252,10 @@ class ConfigsData:
 
     def read_stop_words(self, file_name="stop_words.csv"):
         """
-        Read the given stop words csv file in config path
-        Set the Class Variable for further use
-        params: file_name - string
+        Read the given stop words CSV file in the config path and set the class variable for further use.
+
+        Args:
+            file_name (str): The name of the CSV file.
         """
         logger.debug("<<<< 'Current Executing Function' >>>>")
         # Get the programming language stop words
@@ -226,6 +263,69 @@ class ConfigsData:
         self.stop_words = read_csv_file(self.stop_words_file, output="list", header=0)
         self.stop_words = [item for sublist in self.stop_words for item in sublist]
         # logger.debug(f"Total Stop Words: {len(self.stop_words)}")
+
+    def read_search_paths(self, file_name):
+        """
+        Read the given search paths CSV file in the config directory and set the class variable for further use.
+
+        Args:
+            file_name (str): The name of the CSV file.
+        """
+        logger.debug("<<<< 'Current Executing Function' >>>>")
+
+        # Loading the search paths file to retrieve the paths that need the extension filter applied
+        self.search_paths_file = os.path.join(self.config_dir, file_name)
+        self.search_paths = read_csv_file(
+            self.search_paths_file, output="list", header=0
+        )
+        self.search_paths = [item for sublist in self.search_paths for item in sublist]
+        # logger.debug(f"search_paths: {self.search_paths}")
+
+    def read_search_files(self, file_name):
+        """
+        Read the given search paths CSV file in the config directory and set the class variable for further use.
+
+        Args:
+            file_name (str): The name of the CSV file.
+        """
+        logger.debug("<<<< 'Current Executing Function' >>>>")
+
+        # Reading the paths of files to be searched after applying the extension filter
+        self.target_paths_file = os.path.join(self.output_dir, file_name)
+        self.search_files = read_csv_file(
+            self.target_paths_file, output="list", header=0
+        )
+        self.search_files = [item for sublist in self.search_files for item in sublist]
+        # logger.debug(f"search_files: {self.search_files}")
+
+    def read_hashed_file(self, file_name):
+        """
+        Read the given hashed file CSV file in the output path and set the class variable for further use.
+
+        Args:
+            file_name (str): The name of the CSV file.
+        """
+        logger.debug("<<<< 'Current Executing Function' >>>>")
+        # Loading Existing url hash detections
+        self.hashed_file = os.path.join(self.output_dir, file_name)
+        hashed_key_files = read_csv_file(self.hashed_file, output="", header=0)
+        try:
+            self.hashed_files = (
+                hashed_key_files.get("hashed_files").drop_duplicates().tolist()
+            )
+            self.hashed_file_modified_time = (
+                hashed_key_files.get("file_modification_hash")
+                .drop_duplicates()
+                .tolist()
+            )
+            self.hash_file_path = (
+                hashed_key_files.get("files").drop_duplicates().tolist()
+            )
+        except:
+            self.hashed_files = []
+            self.hashed_file_modified_time = []
+            self.hash_file_path = []
+        # logger.debug(f"hashed_urls: {self.hashed_urls}")
 
 
 if __name__ == "__main__":

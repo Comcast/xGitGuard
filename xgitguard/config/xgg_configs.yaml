@@ -15,6 +15,23 @@ github:
   enterprise_commits_url: "https://github.<< Enterprise Name >>.com/api/v3/repos/{user_name}/{repo_name}/commits?path={file_path}"
   enterprise_header: { "Accept": "application/vnd.github.v3.raw" }
 
+model:
+  # Model Configurations
+
+  # GitHub Public
+  public:
+    training_data_key: "public_key_train.csv"
+    training_data_cred: "public_cred_train.csv"
+    model_key_file: "public_xgg_key_rf_model_object.pickle"
+    model_cred_file: "public_xgg_cred_rf_model_object.pickle"
+
+  # GitHub Enterprise
+  enterprise:
+    training_data_key: "key_train.csv"
+    training_data_cred: "cred_train.csv"
+    model_key_file: "xgg_key_rf_model_object.pickle"
+    model_cred_file: "xgg_cred_rf_model_object.pickle"
+
 secrets:
   public_data_columns:
     [
@@ -104,6 +121,29 @@ secrets:
       "Day",
       "Hour",
     ]
+
+file_scanner:
+  local_file_scan_detection_columns:
+    [
+      "Source",
+      "Second_Key",
+      "Extension",
+      "URL",
+      "Secret",
+      "Code",
+      "Detected_Timestamp",
+      "Key_Weight",
+      "SKey_Count",
+      "Entropy",
+      "Dictionary_Similarity",
+      "Score",
+      "Year",
+      "Month",
+      "Day",
+      "Hour",
+    ]
+  unique_columns: ["Source", "Second_Key", "Extension", "URL", "Code"]
+
 keywords:
   public_data_columns:
     [

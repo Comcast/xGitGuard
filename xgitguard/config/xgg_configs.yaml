@@ -99,6 +99,17 @@ secrets:
       "Day",
       "Hour",
     ]
+  precommit_data_collector_columns:
+    [
+        "File",
+        "Secret",
+        "Code",
+        "Key_Weight",
+        "SKey_Count",
+        "Entropy",
+        "Dictionary_Similarity",
+        "Score"
+    ]
   public_data_collector_columns:
     [
       "Source",

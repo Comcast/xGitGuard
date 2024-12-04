@@ -20,8 +20,7 @@ import logging
 import os
 from datetime import datetime
 
-
-def create_logger(log_level=20, console_logging=True, log_dir=None, log_file_name=None):
+def create_logger(log_level=20, console_logging=True, log_dir=None, log_file_name=None, show_current_run_logs=True):
     """
     Create logging class and return
     params: log_level - int - Default - 10
@@ -42,7 +41,7 @@ def create_logger(log_level=20, console_logging=True, log_dir=None, log_file_nam
     )
 
     # add file handler to logger
-    logger.addHandler(set_file_handler(logger_name, formatter, log_dir, log_file_name))
+    logger.addHandler(set_file_handler(logger_name, formatter, log_dir, log_file_name, show_current_run_logs))
 
     if console_logging:
         logger.addHandler(set_console_handler(formatter))
@@ -50,7 +49,7 @@ def create_logger(log_level=20, console_logging=True, log_dir=None, log_file_nam
     return logger
 
 
-def set_file_handler(logger_name, formatter, log_dir, log_file_name):
+def set_file_handler(logger_name, formatter, log_dir, log_file_name, show_current_run_logs):
     """Setting File streaming Handler"""
     # define file handler and set formatter
     if log_dir and os.path.exists(log_dir):
@@ -65,7 +64,8 @@ def set_file_handler(logger_name, formatter, log_dir, log_file_name):
     log_file = os.path.join(log_dir, log_file_name)
     file_handler = logging.FileHandler(log_file)
     file_handler.setFormatter(formatter)
-    print(f"Current run logs file: {log_file}")
+    if(show_current_run_logs):
+        print(f"Current run logs file: {log_file}")
     return file_handler
 
 

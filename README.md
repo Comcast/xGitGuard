@@ -956,10 +956,10 @@ Licensed under the [Apache 2.0](LICENSE) license.
 
 # Contributors
 
-This project exists thanks to all the people who contribute. [[Contribute](CONTRIBUTING.md)].
+This project exists thanks to all the people who contribute. [[Contribute](CONTRIBUTING.md)]
 
 <a href="https://github.com/comcast/xGitGuard/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=comcast/xGitGuard" />
 </a>
 
-Made with [contrib.rocks](https://contrib.rocks).
+Made with [contrib.rocks](https://contrib.rocks)

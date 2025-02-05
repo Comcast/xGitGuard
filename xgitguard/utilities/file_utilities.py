@@ -25,6 +25,12 @@ import yaml
 
 logger = logging.getLogger("xgg_logger")
 
+def findLineNumber(code_content,code_line):
+    for index,line in enumerate(code_content):
+        if(code_line in line or code_line == line):
+            return index+1
+    return -1
+
 
 def read_text_file(file_path):
     """

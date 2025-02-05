@@ -221,7 +221,7 @@ def process_search_results(search_response_lines, search_query):
     return detection_writes_per_query, new_results_per_query, detections_per_query
 
 
-def run_detection(public_keywords=[], org=[], repo=[]):
+def run_detection(public_keywords=[], org=[], repo=[], search_archived = True, search_forked = True):
     """
     Run GitHub search
     If a primary keyword is provided, perform the search using the primary keyword.
@@ -264,6 +264,8 @@ def run_detection(public_keywords=[], org=[], repo=[]):
                 "",
                 org,
                 repo,
+                search_archived,
+                search_forked
             )
             # If search has detections, process the result urls else continue next search
             if search_response_lines:
@@ -354,6 +356,26 @@ def arg_parser():
         help="Pass the repo name list as comma separated string",
     )
     argparser.add_argument(
+        "-a",
+        "--archived",
+        metavar="Archived",
+        action="store",
+        type=str,
+        default="Yes",
+        choices=flag_choices,
+        help="Pass Yes or No to search for Archived repos. Default is Yes",
+    )
+    argparser.add_argument(
+        "-f",
+        "--forked",
+        metavar="Forked",
+        action="store",
+        type=str,
+        default="Yes",
+        choices=flag_choices,
+        help="Pass Yes or No to search for Forked repos. Default is Yes",
+    )
+    argparser.add_argument(
         "-l",
         "--log_level",
         metavar="Logger Level",
@@ -389,6 +411,14 @@ def arg_parser():
             repo = []
     else:
         repo = []
+    if args.archived.lower() in flag_choices[:5]:
+        search_archived = True
+    else:
+        search_archived = False
+    if args.forked.lower() in flag_choices[:5]:
+        search_forked = True
+    else:
+        search_forked = False
     if args.log_level in log_level_choices:
         log_level = args.log_level
     else:
@@ -401,6 +431,8 @@ def arg_parser():
         public_keywords,
         org,
         repo,
+        search_archived,
+        search_forked,
         log_level,
         console_logging,
     )
@@ -412,6 +444,8 @@ if __name__ == "__main__":
         public_keywords,
         org,
         repo,
+        search_archived,
+        search_forked,
         log_level,
         console_logging,
     ) = arg_parser()
@@ -436,5 +470,5 @@ if __name__ == "__main__":
             f"GitHub API Token Environment variable '{token_var}' not set. API Search will fail/return no results. Please Setup and retry"
         )
         sys.exit(1)
-    run_detection(public_keywords, org, repo)
+    run_detection(public_keywords, org, repo, search_archived, search_forked)
     logger.info("xGitGuard custom keyword search Process  Completed")

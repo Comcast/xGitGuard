@@ -953,3 +953,13 @@ Licensed under the [Apache 2.0](LICENSE) license.
 
 [python >= v3.6]: https://www.python.org/downloads/
 [how to get github api token]: https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token
+
+# Contributors
+
+This project exists thanks to all the people who contribute. [[Contribute](CONTRIBUTING.md)]
+
+<a href="https://github.com/comcast/xGitGuard/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=comcast/xGitGuard" />
+</a>
+
+Made with [contrib.rocks](https://contrib.rocks)

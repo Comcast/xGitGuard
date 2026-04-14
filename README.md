@@ -176,11 +176,20 @@ python enterprise_cred_detections.py -o org_name        #Ex: python enterprise_c
 python enterprise_cred_detections.py -r org_name/repo_name     #Ex: python enterprise_cred_detections.py -r test_org/public_docker
 ```
 
+##### Command to Run Enterprise Credentials Scanner for a specific branch
+
+```
+# Run for a specific branch,
+python enterprise_cred_detections.py -r org_name/repo_name -b branch_name     #Ex: python enterprise_cred_detections.py -r test_org/public_docker -b develop
+```
+
+> **Note:** If the specified branch does not exist in the repo, the scanner will exit with an error.
+
 ##### Command-Line Arguments for Credential Scanner
 
 ```
 Run usage:
-enterprise_cred_detections.py [-h] [-s Secondary Keywords] [-e Extensions] [-m Ml prediction] [-u Unmask Secret] [-o org_name] [-r repo_name] [-l Logger Level] [-c Console Logging]
+enterprise_cred_detections.py [-h] [-s Secondary Keywords] [-e Extensions] [-m Ml prediction] [-u Unmask Secret] [-o org_name] [-r repo_name] [-b Branch] [-l Logger Level] [-c Console Logging]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -194,6 +203,8 @@ optional arguments:
                           Pass the flag as Yes or No. Default is No
   -o pass org name, --org Pass the targeted org list as a comma-separated string
   -r pass repo name, --repo Pass the targeted repo list as a comma-separated string
+  -b Branch, --branch Branch
+                          Pass the Branch name to scan. If the branch does not exist, the scanner will exit with an error
   -l Logger Level, --log_level Logger Level
                           Pass the Logging level as for CRITICAL - 50, ERROR - 40 WARNING - 30 INFO - 20 DEBUG - 10. Default is 20
   -c Console Logging, --console_logging Console Logging
@@ -234,6 +245,15 @@ python enterprise_key_detections.py -o org_name        #Ex: python enterprise_ke
 python enterprise_key_detections.py -r org_name/repo_name     #Ex: python enterprise_key_detections.py -r test_org/public_docker
 ```
 
+##### Command to Run Enterprise Keys and Tokens Scanner for a specific branch
+
+```
+# Run for a specific branch,
+python enterprise_key_detections.py -r org_name/repo_name -b branch_name     #Ex: python enterprise_key_detections.py -r test_org/public_docker -b develop
+```
+
+> **Note:** If the specified branch does not exist in the repo, the scanner will exit with an error.
+
 ##### Detections With ML Filter
 
 xGitGuard also has an additional ML filter where users can collect their organization/targeted data and train their model. Having this ML filter helps in reducing the false positives from the detection.
@@ -260,7 +280,7 @@ python enterprise_key_detections.py -m Yes
 
 ```
 Run usage:
-enterprise_key_detections.py [-h] [-s Secondary Keywords] [-e Extensions] [-m Ml prediction] [-u Unmask Secret] [-o org_name] [-r repo_name] [-l Logger Level] [-c Console Logging]
+enterprise_key_detections.py [-h] [-s Secondary Keywords] [-e Extensions] [-m Ml prediction] [-u Unmask Secret] [-o org_name] [-r repo_name] [-b Branch] [-l Logger Level] [-c Console Logging]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -274,6 +294,8 @@ optional arguments:
                           Pass the flag as Yes or No. Default is No
   -o pass org name, --org Pass the targeted org list as a comma-separated string
   -r pass repo name, --repo Pass the targeted repo list as a comma-separated string
+  -b Branch, --branch Branch
+                          Pass the Branch name to scan. If the branch does not exist, the scanner will exit with an error
   -l Logger Level, --log_level Logger Level
                           Pass the Logging level as for CRITICAL - 50, ERROR - 40 WARNING - 30 INFO - 20 DEBUG - 10. Default is 20
   -c Console Logging, --console_logging Console Logging
@@ -354,6 +376,15 @@ python public_cred_detections.py -o org_name         #Ex: python public_cred_det
 python public_cred_detections.py -r org_name/repo_name        #Ex: python public_cred_detections.py -r test_org/public_docker
 ```
 
+##### Command to Run Public Credential Scanner for a specific branch
+
+```
+# Run for a specific branch,
+python public_cred_detections.py -r org_name/repo_name -b branch_name        #Ex: python public_cred_detections.py -r test_org/public_docker -b develop
+```
+
+> **Note:** If the specified branch does not exist in the repo, the scanner will exit with an error.
+
 ##### Detections With ML Filter
 
 xGitGuard also has an additional ML filter, where users can collect their organization/targeted data and train their model. Having this ML filter helps in reducing the false positives from the detection.
@@ -379,7 +410,7 @@ python public_cred_detections.py -m Yes
 
 ```
 Run usage:
-usage: public_cred_detections.py [-h] [-p Primary Keywords] [-s Secondary Keywords] [-e Extensions] [-m Ml prediction] [-u Unmask Secret] [-o org_name] [-r repo_name] [-l Logger Level] [-c Console Logging]
+usage: public_cred_detections.py [-h] [-p Primary Keywords] [-s Secondary Keywords] [-e Extensions] [-m Ml prediction] [-u Unmask Secret] [-o org_name] [-r repo_name] [-b Branch] [-l Logger Level] [-c Console Logging]
 
 optional arguments:
 -h, --help show this help message and exit
@@ -395,6 +426,8 @@ Pass the Extensions list as a comma-separated string
                           Pass the flag as Yes or No. Default is No
 -o pass org name, --org Pass the targeted org list as a comma-separated string
 -r pass repo name, --repo Pass the targeted repo list as a comma-separated string
+-b Branch, --branch Branch
+                          Pass the Branch name to scan. If the branch does not exist, the scanner will exit with an error
 -l Logger Level, --log_level Logger Level
 Pass the Logging level as for CRITICAL - 50, ERROR - 40 WARNING - 30 INFO - 20 DEBUG - 10. Default is 20
 -c Console Logging, --console_logging Console Logging
@@ -438,6 +471,15 @@ python public_key_detections.py -o org_name           #Ex: python public_key_det
 python public_key_detections.py -r org_name/repo_name      #Ex: python public_key_detections.py -r test_org/public_docker
 ```
 
+##### Command to Run Public Keys and Tokens Scanner for a specific branch
+
+```
+# Run for a specific branch,
+python public_key_detections.py -r org_name/repo_name -b branch_name      #Ex: python public_key_detections.py -r test_org/public_docker -b develop
+```
+
+> **Note:** If the specified branch does not exist in the repo, the scanner will exit with an error.
+
 ##### Detections With ML Filter
 
 xGitGuard also has an additional ML filter, where users can collect their organization/targeted data and train their model. Having this ML filter helps in reducing the false positives from the detection.
@@ -462,7 +504,7 @@ python public_key_detections.py -m Yes
 
 ```
 usage:
-public_key_detections.py [-h] [-s Secondary Keywords] [-e Extensions] [-m Ml prediction][-u Unmask Secret] [-o org_name] [-r repo_name] [-l Logger Level] [-c Console Logging]
+public_key_detections.py [-h] [-s Secondary Keywords] [-e Extensions] [-m Ml prediction][-u Unmask Secret] [-o org_name] [-r repo_name] [-b Branch] [-l Logger Level] [-c Console Logging]
 
 optional arguments:
 -h, --help show this help message and exit
@@ -476,6 +518,8 @@ Pass the Extensions list as a comma-separated string
                           Pass the flag as Yes or No. Default is No
 -o pass org name, --org Pass the targeted org list as a comma-separated string
 -r pass repo name, --repo Pass the targeted repo list as a comma-separated string
+-b Branch, --branch Branch
+                          Pass the Branch name to scan. If the branch does not exist, the scanner will exit with an error
 -l Logger Level, --log_level Logger Level
 Pass the Logging level as for CRITICAL - 50, ERROR - 40 WARNING - 30 INFO - 20 DEBUG - 10. Default is 20
 -c Console Logging, --console_logging Console Logging

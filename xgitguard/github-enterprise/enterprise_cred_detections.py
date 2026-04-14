@@ -372,7 +372,7 @@ def check_existing_detections(org_url_list, url_list, search_query):
     return new_org_url_list, new_urls_list, new_hashed_urls
 
 
-def process_search_results(search_response_lines, search_query, ml_prediction):
+def process_search_results(search_response_lines, search_query, ml_prediction, branch=""):
     """
     For each search response items, process as below
         Get the html urls from the search response
@@ -389,6 +389,7 @@ def process_search_results(search_response_lines, search_query, ml_prediction):
     params: search_response_lines - list
     params: search_query - string
     params: ml_prediction - boolean
+    params: branch - string - optional
 
     returns: detection_writes_per_query - int - Total detections written to file
     returns: new_results_per_query - int - No of new urls per query
@@ -415,6 +416,9 @@ def process_search_results(search_response_lines, search_query, ml_prediction):
             + "/contents/"
             + line["path"]
         )
+        # If branch is specified, add ref parameter to the contents API URL
+        if branch:
+            html_url = html_url + "?ref=" + branch
         url_list.append(html_url)
 
     if url_list:
@@ -542,7 +546,7 @@ def format_search_query_list(secondary_keywords):
 
 
 def run_detection(
-    secondary_keywords=[], extensions=[], ml_prediction=False, org=[], repo=[]
+    secondary_keywords=[], extensions=[], ml_prediction=False, org=[], repo=[], branch=""
 ):
     """
     Run GitHub detections
@@ -657,7 +661,7 @@ def run_detection(
                         new_results_per_query,
                         detections_per_query,
                     ) = process_search_results(
-                        search_response_lines, search_query, ml_prediction
+                        search_response_lines, search_query, ml_prediction, branch
                     )
                     logger.info(
                         f"Detection writes in current search query: {detection_writes_per_query}"
@@ -806,6 +810,16 @@ def arg_parser():
         help="Pass the Console Logging as Yes or No. Default is Yes",
     )
 
+    argparser.add_argument(
+        "-b",
+        "--branch",
+        metavar="Branch Name",
+        action="store",
+        type=str,
+        default="",
+        help="Pass the Branch name to scan. If branch does not exist, falls back to default branch",
+    )
+
     args = argparser.parse_args()
 
     if args.secondary_keywords:
@@ -850,6 +864,8 @@ def arg_parser():
     else:
         console_logging = False
 
+    branch = args.branch.strip() if args.branch else ""
+
     return (
         secondary_keywords,
         extensions,
@@ -859,6 +875,7 @@ def arg_parser():
         repo,
         log_level,
         console_logging,
+        branch,
     )
 
 
@@ -873,6 +890,7 @@ if __name__ == "__main__":
         repo,
         log_level,
         console_logging,
+        branch,
     ) = arg_parser()
 
     # Setting up Logger
@@ -898,6 +916,19 @@ if __name__ == "__main__":
         )
         sys.exit(1)
 
-    run_detection(secondary_keywords, extensions, ml_prediction, org, repo)
+    # Validate branch if specified
+    if branch and repo:
+        repo_parts = repo[0].split("/")
+        if len(repo_parts) == 2:
+            header = configs.xgg_configs["github"]["enterprise_header"]
+            if githubCalls.check_enterprise_branch_exists(repo_parts[0], repo_parts[1], branch, header):
+                logger.info(f"Branch '{branch}' exists in repo '{repo[0]}'. Scanning branch '{branch}'.")
+            else:
+                logger.error(f"Branch '{branch}' not found in repo '{repo[0]}'. Please provide a valid branch name")
+                sys.exit(1)
+    elif branch and not repo:
+        logger.info(f"Branch '{branch}' specified. Will attempt to scan files on this branch.")
+
+    run_detection(secondary_keywords, extensions, ml_prediction, org, repo, branch)
 
     logger.info("xGitGuard Credentials Detection Process Completed")

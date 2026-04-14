@@ -325,3 +325,61 @@ class GithubCalls:
         except Exception as e:
             logger.error(f"Github API commit content get Error: {e}")
         return {}
+
+    def check_public_branch_exists(self, user_name, repo_name, branch):
+        """
+        Check if a branch exists in a public GitHub repository
+        params: user_name - string
+        params: repo_name - string
+        params: branch - string
+        returns: True if branch exists, False otherwise
+        """
+        logger.debug("<<<< 'Current Executing Function' >>>>")
+        token_var = "GITHUB_TOKEN"
+        if not os.getenv(token_var):
+            logger.error(
+                f"GitHub API Token Environment variable '{token_var}' not set."
+            )
+            return False
+        try:
+            time.sleep(self._throttle_time)
+            base = self._base_url.replace("/search/code", "")
+            url = f"{base}/repos/{user_name}/{repo_name}/branches/{branch}"
+            response = requests.get(
+                url, auth=("token", os.getenv(token_var)), timeout=10
+            )
+            return response.status_code == 200
+        except Exception as e:
+            logger.error(f"Public branch existence check failed for '{user_name}/{repo_name}' branch '{branch}': {e}")
+            return False
+
+    def check_enterprise_branch_exists(self, user_name, repo_name, branch, header):
+        """
+        Check if a branch exists in an enterprise GitHub repository
+        params: user_name - string
+        params: repo_name - string
+        params: branch - string
+        params: header - dict
+        returns: True if branch exists, False otherwise
+        """
+        logger.debug("<<<< 'Current Executing Function' >>>>")
+        token_var = "GITHUB_ENTERPRISE_TOKEN"
+        if not os.getenv(token_var):
+            logger.error(
+                f"GitHub API Token Environment variable '{token_var}' not set."
+            )
+            return False
+        try:
+            time.sleep(self._throttle_time)
+            base = self._base_url.replace("/search/code", "")
+            url = f"{base}/repos/{user_name}/{repo_name}/branches/{branch}"
+            response = requests.get(
+                url,
+                auth=("token", os.getenv(token_var)),
+                headers=header,
+                timeout=10,
+            )
+            return response.status_code == 200
+        except Exception as e:
+            logger.error(f"Enterprise branch existence check failed for '{user_name}/{repo_name}' branch '{branch}': {e}")
+            return False

@@ -7,6 +7,7 @@ github:
   # GitHub Public
   public_api_url: "https://api.github.com/search/code"
   public_commits_url: "https://api.github.com/repos/%s/%s/commits?path=%s"
+  public_pre_url: "https://api.github.com/repos/"
 
   # GitHub Enterprise - For Open Source
   enterprise_api_url: "https://github.<< Enterprise Name >>.com/api/v3/search/code"

@@ -19,6 +19,7 @@ SPDX-License-Identifier: Apache-2.0
 import logging
 import os
 import sys
+import pickle
 
 import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
@@ -208,6 +209,39 @@ class ConfigsData:
             )
             raise Exception(
                 f"confidence_values file is not present/readable: {self.confidence_values_file}"
+            )
+
+
+    def read_cached_dictionary_words(self, file_name="dictionary_words.csv"):
+        """
+        Read the given dictionary words csv file in config path
+        Create dictionary similarity values
+        Set the Class Variables for further use
+        params: file_name - string
+        """
+        logger.debug("<<<< 'Current Executing Function' >>>>")
+        # Creating dictionary similarity values
+        self.dictionary_words_file = os.path.join(self.config_dir, file_name)
+        self.dictionary_words = read_csv_file(
+            self.dictionary_words_file, output="dataframe", header=0
+        )
+        # logger.debug("Dictionary_words file Read")
+        if not self.dictionary_words.empty:
+            try:
+                with open('/Users/sparri919/Documents/GitHub/xGitGuard/xgitguard/config/vectorizer.pkl', 'rb') as file:
+                    self.dict_words_vc = pickle.load(file)
+                with open('/Users/sparri919/Documents/GitHub/xGitGuard/xgitguard/config/count_matrix.pkl', 'rb') as file:
+                    count = pickle.load(file)
+                self.dict_words_ct = np.log10(count.sum(axis=0).getA1())
+            except Exception as e:
+                logger.error(f"Count Vectorizer Error: {e}")
+                raise Exception(f"Count Vectorizer Error: {e}")
+        else:
+            logger.error(
+                f"confidence_values file is not present/readable: {self.dictionary_words_file}"
+            )
+            raise Exception(
+                f"confidence_values file is not present/readable: {self.dictionary_words_file}"
             )
 
     def read_dictionary_words(self, file_name="dictionary_words.csv"):

@@ -22,6 +22,9 @@ import re
 from urlextract import URLExtract
 
 
+
+specialCharacterRegex = re.compile("[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+")
+
 def remove_url_from_keys(code_content):
     """
     Replace special chars in the given code content data
@@ -118,6 +121,48 @@ def remove_url_from_creds(code_content, key):
     codes_list = code_data.split()
     return codes_list
 
+def clean_credentials(code_content):
+    """
+    Replace special chars in the given code content data
+    params: code_content - string - code data
+    returns: data - string - Cleaned up code data
+    """
+    code_data = specialCharacterRegex.sub(" ", code_content)
+
+    special_chars = [
+        "'",
+        '"',
+        "#",
+        "%",
+        "&",
+        "(",
+        ")",
+        "*",
+        "+",
+        ",",
+        "-",
+        ".",
+        "/",
+        ":",
+        ";",
+        "<",
+        "=",
+        ">",
+        "?",
+        "[",
+        "\\",
+        "]",
+        "`",
+        "{",
+        "|",
+        "}",
+        "~",
+    ]
+    # Remove special characters if present
+    for special_char in special_chars:
+        code_data = code_data.replace(special_char, " ")
+    codes_list = code_data.split()
+    return codes_list
 
 def keys_extractor(code_content):
     """

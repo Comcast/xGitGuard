@@ -171,6 +171,7 @@ class GithubCalls:
                     response = requests.get(
                         response.links["next"]["url"],
                         auth=("token", os.getenv(token_var)),
+                        timeout=30,
                     )
 
                     if response.status_code == 200:

@@ -116,7 +116,7 @@ def calculate_confidence(secondary_keyword, extension, secret):
     try:
         if not configs.dictionary_words.empty:
             pass
-    except:
+    except Exception:
         # Get the dictionary_words from dictionary words file
         configs.read_dictionary_words(file_name="dictionary_words.csv")
         logger.info(
@@ -126,12 +126,12 @@ def calculate_confidence(secondary_keyword, extension, secret):
         secondary_keyword_value = int(
             configs.confidence_values.loc[secondary_keyword]["value"]
         )
-    except:
+    except Exception:
         secondary_keyword_value = 0
 
     try:
         extension_value = int(configs.confidence_values.loc[extension]["value"])
-    except:
+    except Exception:
         extension = 0
         extension_value = 0
 

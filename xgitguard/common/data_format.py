@@ -129,22 +129,22 @@ def keys_extractor(code_content):
     regexes = {
         "AWS Tokens": "(?:A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}",
         "AWS Access Key ID": "[0-9a-zA-Z/+=]{40}",
-        "Google OAuth Secret": "[0-9a-zA-Zn\-_]{24}",
-        "Google OAuth Auth Code": "4/[0-9A-Za-zn\-_]+",
-        "Google OAuth Refresh Token": "1/[0-9A-Za-zn\-_]{43}|1/[0-9A-Za-zn\-_]{64}",
-        "Google OAuth Access Token": "ya29n.[0-9A-Za-zn\-_]+",
-        "Google API Key": "AIza[0-9A-Za-zn\-_]{35}",
+        "Google OAuth Secret": r"[0-9a-zA-Z\-_]{24}",
+        "Google OAuth Auth Code": r"4/[0-9A-Za-z\-_]+",
+        "Google OAuth Refresh Token": r"1/[0-9A-Za-z\-_]{43}|1/[0-9A-Za-z\-_]{64}",
+        "Google OAuth Access Token": r"ya29\.[0-9A-Za-z\-_]+",
+        "Google API Key": r"AIza[0-9A-Za-z\-_]{35}",
         "RSA Private Key": "BEGIN RSA PRIVATE KEY",
         "EC Private Key": "BEGIN EC PRIVATE KEY",
         "PGP Private Key": "BEGIN PGP PRIVATE KEY BLOCK",
         "General Private Key": "BEGIN PRIVATE KEY",
-        "Google YouTube OAuth ID Gmail, GCloud": "[0-9]+-[0-9A-Za-z_]f32gn.appsn.googleusercontentn.com",
-        "Amazon MWS": "access_tokenn$productionn$[0-9a-z]f16gn$[0-9a-f]f32g",
-        "PayPal": "amznn.mwsn.[0-9a-f]f8g-[0-9a-f]f4g-[0-9a-f]f4g-[0-9a-f]f4g-[0-9a-f]f12g",
+        "Google YouTube OAuth ID Gmail, GCloud": r"[0-9]+-[0-9A-Za-z_]{32}\.apps\.googleusercontent\.com",
+        "Amazon MWS": r"amzn\.mws\.[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+        "PayPal Braintree": r"access_token\$production\$[0-9a-z]{16}\$[0-9a-f]{32}",
         "Slack Token": "(xox[pbaor]-[0-9]{12}-[0-9]{12}-[0-9]{12}-[a-z0-9]{32})",
         "AWS": "(?:.*awsSecretKey|.*aws_secret|.*api-key|.*aws_account_secret).*"
         "(?=.*[A-Z])(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=])",
-        "Slack Webook": "T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8}/[a-zA-Z0-9_]{24}",
+        "Slack Webhook": r"T[a-zA-Z0-9_]{8}/B[a-zA-Z0-9_]{8}/[a-zA-Z0-9_]{24}",
     }
 
     keys = []
